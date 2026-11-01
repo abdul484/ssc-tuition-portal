@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classes & Timings - SSC Students Study Circle</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cream: '#FAF7F2',
+              dark: '#261710',
+              muted: '#705E53',
+              border: '#E8DDD0',
+              soft: '#F4ECE1'
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            handwriting: ['"Caveat"', 'cursive']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="assets/css/custom.css">
+</head>
+<body class="bg-[#FAF7F2] text-brand-dark font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Main Navigation Header (Exact Order: Home | About | Books | Students | Classes | Admin) -->
+  <header class="w-full bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-40 border-b border-brand-border/60">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">
+      <a class="flex items-center gap-3.5 group" href="index.html#home">
+        <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+          <img alt="SSC Logo" class="w-full h-full object-contain" src="assets/images/ssc_logo.png">
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif font-black tracking-tight text-2xl leading-none text-brand-dark">SSC</span>
+          <span class="text-[9.5px] uppercase tracking-[0.18em] font-semibold text-brand-muted mt-1">Students Study Circle</span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8 lg:gap-10">
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="index.html#home">Home</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="about.html">About</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="books.html">Books</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="students.html">Students</a>
+        <a class="text-sm font-semibold text-brand-dark border-b-2 border-brand-dark py-1" href="classes.html">Classes</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="index.html#admin">Admin</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a class="btn-3d-hero inline-flex items-center gap-2 text-white text-sm font-medium px-6 py-3 rounded-full" href="enrollment.html">
+          <span>Enroll Now</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Classes Screen Content -->
+  <main class="py-12 flex-1" id="classes">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12">
+      
+      <!-- Back Link -->
+      <div class="mb-6">
+        <a href="index.html#home" class="inline-flex items-center text-xs font-semibold uppercase tracking-wider text-brand-muted hover:text-brand-dark transition gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+          Back to Home
+        </a>
+      </div>
+
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+        <div class="max-w-2xl">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="w-8 h-[2px] bg-[#9C795C]"></span>
+            <span class="text-xs uppercase font-bold tracking-[0.25em] text-[#9C795C]">ACADEMIC PROGRAMS</span>
+          </div>
+          <h1 class="font-serif text-4xl sm:text-5xl font-bold text-brand-dark tracking-tight">
+            Tuition Classes Overview
+          </h1>
+          <p class="text-brand-muted text-base mt-2">
+            Quality Education for Students from LKG to Class 10 with tailored guidance, individual attention, and proven academic growth.
+          </p>
+        </div>
+
+        <div class="mt-4 md:mt-0 flex flex-col items-start md:items-end gap-1.5">
+          <span class="px-4 py-1.5 rounded-full bg-[#F4ECE1] text-xs font-bold text-brand-dark border border-[#E7DAC9]">
+            🕒 Mon – Sat (5:00 PM – 7:30 PM Regular)
+          </span>
+          <span class="text-[11px] text-[#8C7A6D] font-medium">Extended to 8:00 / 8:30 PM for communication classes</span>
+        </div>
+      </div>
+
+      <!-- Class Breakdown Grid (LKG to Class 10 Cards) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        
+        <!-- LKG Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(244, 114, 182, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-pink-100 text-pink-800">Early Learning</span>
+              <span class="fee-pill-3d">₹1,000 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">LKG</h3>
+            <p class="text-xs text-brand-muted mb-4">Playful and caring foundation in sounds, alphabet recognition, numbers, and motor skills.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Alphabet Phonics & Letter Sounds</div>
+              <div class="flex items-center gap-2">✓ Number Recognition & Tracing (1-20)</div>
+              <div class="flex items-center gap-2">✓ Colors, Shapes, Rhymes & Storytime</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for LKG
+          </a>
+        </div>
+
+        <!-- UKG Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(168, 85, 247, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800">Kindergarten Prep</span>
+              <span class="fee-pill-3d">₹1,000 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">UKG</h3>
+            <p class="text-xs text-brand-muted mb-4">Reading readiness, simple vocabulary, number operations, and curious discovery.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ CVC Words, Sight Words & Early Sentences</div>
+              <div class="flex items-center gap-2">✓ Numbers 1-50, Simple Addition & Counting</div>
+              <div class="flex items-center gap-2">✓ Living Habits, Manners & Environmental GK</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for UKG
+          </a>
+        </div>
+
+        <!-- Class 1 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(16, 185, 129, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Primary Foundation</span>
+              <span class="fee-pill-3d">₹1,100 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">1st Class</h3>
+            <p class="text-xs text-brand-muted mb-4">Structured primary classroom habits, fluent sentence reading, and basic math.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Addition & Subtraction (1-100), Skip Counting</div>
+              <div class="flex items-center gap-2">✓ Sentence Formation, Handwriting & Grammar</div>
+              <div class="flex items-center gap-2">✓ My Family, Helpers & Nature Studies</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 1st Class
+          </a>
+        </div>
+
+        <!-- Class 2 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(239, 68, 68, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-[#FEE2E2] text-[#9F1239]">Primary Level</span>
+              <span class="fee-pill-3d">₹1,100 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">2nd Class</h3>
+            <p class="text-xs text-brand-muted mb-4">Building strong reading habits, handwriting fluency, and basic number operations.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Number System (1-1000) & Mental Addition</div>
+              <div class="flex items-center gap-2">✓ Phonics, Spelling Rules & Sight Words</div>
+              <div class="flex items-center gap-2">✓ Environmental Studies & General Awareness</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 2nd Class
+          </a>
+        </div>
+
+        <!-- Class 3 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(34, 197, 94, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-[#DCFCE7] text-[#166534]">Primary Level</span>
+              <span class="fee-pill-3d">₹1,200 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">3rd Class</h3>
+            <p class="text-xs text-brand-muted mb-4">Mastering multiplication tables, sentence construction, and foundational science.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Multiplication, Division & Simple Fractions</div>
+              <div class="flex items-center gap-2">✓ English Grammar & Guided Composition</div>
+              <div class="flex items-center gap-2">✓ Living & Non-living Things, Plants & Animals</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 3rd Class
+          </a>
+        </div>
+
+        <!-- Class 4 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(14, 165, 233, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-[#E0F2FE] text-[#0369A1]">Junior Prep</span>
+              <span class="fee-pill-3d">₹1,300 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">4th Class</h3>
+            <p class="text-xs text-brand-muted mb-4">Geometry concepts, word problems, science experiments, and comprehension drills.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Multi-digit Arithmetic & Roman Numerals</div>
+              <div class="flex items-center gap-2">✓ Matter, States of Water & Human Body Basics</div>
+              <div class="flex items-center gap-2">✓ Map Reading & Indian States Geography</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 4th Class
+          </a>
+        </div>
+
+        <!-- Class 5 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(139, 92, 246, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-[#EDE9FE] text-[#5B21B6]">Middle School Prep</span>
+              <span class="fee-pill-3d">₹1,400 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">5th Class</h3>
+            <p class="text-xs text-brand-muted mb-4">Transition to rigorous concept fundamentals, decimals, fractions, and essay writing.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Factors, Multiples, HCF & LCM, Decimals</div>
+              <div class="flex items-center gap-2">✓ Skeletal System, Simple Machines & Force</div>
+              <div class="flex items-center gap-2">✓ Active/Passive Voice, Tenses & Letter Writing</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 5th Class
+          </a>
+        </div>
+
+        <!-- Class 6 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(245, 158, 11, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]">Secondary Foundation</span>
+              <span class="fee-pill-3d">₹1,500 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">6th Class</h3>
+            <p class="text-xs text-brand-muted mb-4">Algebra introduction, geometry proofs, physics & chemistry separation.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Integers, Algebraic Expressions & Ratio/Proportion</div>
+              <div class="flex items-center gap-2">✓ Separation of Substances, Light & Shadows</div>
+              <div class="flex items-center gap-2">✓ Early Human History & The Solar System</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 6th Class
+          </a>
+        </div>
+
+        <!-- Class 7 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(249, 115, 22, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-[#FFEDD5] text-[#C2410C]">Secondary Foundation</span>
+              <span class="fee-pill-3d">₹1,600 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">7th Class</h3>
+            <p class="text-xs text-brand-muted mb-4">Advanced problem solving, equations, nutrition in plants/animals, and test series.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Linear Equations, Triangle Properties, Exponents</div>
+              <div class="flex items-center gap-2">✓ Acids, Bases, Salts & Electric Current</div>
+              <div class="flex items-center gap-2">✓ Weekly Exam Orientation & Speed Problem Practice</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 7th Class
+          </a>
+        </div>
+
+        <!-- Class 8 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(20, 184, 166, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-teal-100 text-teal-800">Advanced Secondary</span>
+              <span class="fee-pill-3d">₹1,700 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">8th Class</h3>
+            <p class="text-xs text-brand-muted mb-4">Bridging middle school with high school rigor in mathematics proofs and science.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Linear Equations, Mensuration & Factorization</div>
+              <div class="flex items-center gap-2">✓ Force, Pressure, Sound & Microorganisms</div>
+              <div class="flex items-center gap-2">✓ Advanced Grammar, Essays & Social Studies</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 8th Class
+          </a>
+        </div>
+
+        <!-- Class 9 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(99, 102, 241, 0.45);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">Pre-Board Preparation</span>
+              <span class="fee-pill-3d">₹1,800 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">9th Class</h3>
+            <p class="text-xs text-brand-muted mb-4">Rigorous conceptual depth in CBSE and State Board syllabi with numerical practice.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Polynomials, Coordinate Geometry & Triangles</div>
+              <div class="flex items-center gap-2">✓ Laws of Motion, Gravitation, Atoms & Tissues</div>
+              <div class="flex items-center gap-2">✓ Weekly Test Series & Analytical Writing</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 9th Class
+          </a>
+        </div>
+
+        <!-- Class 10 Card -->
+        <div class="class-batch-card-3d p-6 flex flex-col justify-between" style="--batch-glow: rgba(217, 119, 6, 0.55);">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="badge-3d-inset px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">Board Exam Excellence</span>
+              <span class="fee-pill-3d">₹2,000 / mo</span>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-brand-dark mb-1">10th Class (Board Prep)</h3>
+            <p class="text-xs text-brand-muted mb-4">Intensive board examination mastery, previous 10-year paper solutions, and speed drills.</p>
+            
+            <div class="space-y-2 text-xs text-[#4F3F35] mb-5">
+              <div class="flex items-center gap-2">✓ Trigonometry, Real Numbers, Quadratic Equations</div>
+              <div class="flex items-center gap-2">✓ Electricity, Chemical Reactions, Life Processes</div>
+              <div class="flex items-center gap-2">✓ Board Mock Exams, Blueprint Analysis & Timing</div>
+            </div>
+          </div>
+          <a href="enrollment.html" class="btn-3d-dark w-full text-center py-2.5 rounded-xl text-white text-xs font-semibold">
+            Enroll for 10th Class
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Weekly Routine Banner -->
+      <div class="bg-[#F5ECE3] rounded-3xl p-8 border border-[#E7DAC9] flex flex-col lg:flex-row items-center justify-between gap-6">
+        <div>
+          <h4 class="font-serif text-xl sm:text-2xl font-bold text-brand-dark mb-2">Daily Structured Schedule (5:00 PM – 7:30 PM Regular)</h4>
+          <p class="text-sm text-brand-muted max-w-2xl">
+            Standard daily sessions conclude at 7:30 PM (Hour 1: Core Concepts • Hour 2: Guided Exercises • Hour 3: Diagnostic Testing). Extended until 8:00 PM or 8:30 PM occasionally for specialized communication classes and activities.
+          </p>
+        </div>
+        <a href="assets/downloads/SSC_Tuition_Curriculum_and_Syllabus.pdf" download class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-dark text-white text-xs font-semibold hover:bg-black transition shadow-xs shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+          <span>Download Detailed Syllabus</span>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="bg-[#231710] text-[#D8C7B5] py-10 border-t border-[#36251A] mt-auto">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6 text-xs">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-10 bg-[#FAF7F2] rounded-xl p-1 flex items-center justify-center shadow-xs">
+          <img alt="SSC" class="max-h-full max-w-full object-contain" src="assets/images/ssc_logo.png">
+        </div>
+        <span class="font-serif font-bold text-white text-sm">SSC Students Study Circle</span>
+      </div>
+      <div class="flex items-center gap-6 text-[#C5B4A3]">
+        <a href="index.html#home" class="hover:text-white">Home</a>
+        <a href="about.html" class="hover:text-white">About</a>
+        <a href="books.html" class="hover:text-white">Books</a>
+        <a href="students.html" class="hover:text-white">Students</a>
+        <a href="classes.html" class="hover:text-white font-semibold text-white">Classes</a>
+        <a href="index.html#admin" class="hover:text-white">Admin</a>
+      </div>
+      <span class="text-[#8A7564]">© 2026 SSC Students Study Circle. All rights reserved.</span>
+    </div>
+  </footer>
+
+</body>
+</html>

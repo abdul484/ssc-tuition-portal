@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Enrollment - SSC Students Study Circle</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cream: '#FAF7F2',
+              dark: '#261710',
+              muted: '#705E53',
+              border: '#E8DDD0',
+              soft: '#F4ECE1'
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            handwriting: ['"Caveat"', 'cursive']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="assets/css/custom.css">
+</head>
+<body class="bg-soft-curves text-brand-dark font-sans antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- Main Navigation Header (Exact Order: Home | About | Books | Students | Classes | Admin) -->
+  <header class="w-full bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-40 border-b border-brand-border/60">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">
+      <a class="flex items-center gap-3.5 group" href="index.html#home">
+        <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+          <img alt="SSC Logo" class="w-full h-full object-contain" src="assets/images/ssc_logo.png">
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif font-black tracking-tight text-2xl leading-none text-brand-dark">SSC</span>
+          <span class="text-[9.5px] uppercase tracking-[0.18em] font-semibold text-brand-muted mt-1">Students Study Circle</span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8 lg:gap-10">
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="index.html#home">Home</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="about.html">About</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="books.html">Books</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="students.html">Students</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="classes.html">Classes</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="index.html#admin">Admin</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a class="inline-flex items-center gap-2 bg-[#2B1E16] hover:bg-[#1E140E] text-white text-sm font-medium px-6 py-3 rounded-full transition-all duration-300 shadow-sm" href="enrollment.html">
+          <span>Enroll Now</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Enrollment Content -->
+  <main class="w-full max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-16 pt-6 pb-14 flex-1" id="enrollment">
+    
+    <!-- Back Navigation Link -->
+    <div class="mb-5">
+      <a class="inline-flex items-center text-sm font-medium text-[#4F3F34] hover:text-[#23150D] transition-colors group" href="index.html#home">
+        <svg class="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        Back to Home
+      </a>
+    </div>
+
+    <!-- Main Two-Column Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+      
+      <!-- Left Info Column -->
+      <section class="lg:col-span-5 flex flex-col pt-2">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="w-8 h-[2px] bg-[#C29B77]"></span>
+          <span class="text-xs uppercase tracking-[0.25em] font-bold text-[#A88057]">Enroll Now</span>
+        </div>
+
+        <h1 class="font-serif text-4xl sm:text-5xl lg:text-[54px] font-bold text-[#23150D] tracking-tight leading-[1.12] mb-5">
+          Join Our<br>Tuition Classes
+        </h1>
+        <p class="text-[#5F4E43] text-base sm:text-lg leading-relaxed max-w-md mb-9">
+          Give your child a strong foundation with personal attention and concept-based learning.
+        </p>
+
+        <!-- Feature Pillars / Badges -->
+        <div class="grid grid-cols-3 gap-3 sm:gap-4 max-w-md mb-12">
+          <div class="flex flex-col items-center text-center group">
+            <div class="w-14 h-14 rounded-full bg-[#EFE4D6] group-hover:bg-[#E5D7C5] transition-colors flex items-center justify-center text-[#23150D] mb-2.5 shadow-sm">
+              <svg class="w-6 h-6 stroke-[#23150D]" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <span class="text-xs sm:text-sm font-semibold text-[#2D2119] leading-tight">Small<br>Batches</span>
+          </div>
+
+          <div class="flex flex-col items-center text-center group">
+            <div class="w-14 h-14 rounded-full bg-[#EFE4D6] group-hover:bg-[#E5D7C5] transition-colors flex items-center justify-center text-[#23150D] mb-2.5 shadow-sm">
+              <svg class="w-6 h-6 stroke-[#23150D]" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <span class="text-xs sm:text-sm font-semibold text-[#2D2119] leading-tight">Friendly<br>Environment</span>
+          </div>
+
+          <div class="flex flex-col items-center text-center group">
+            <div class="w-14 h-14 rounded-full bg-[#EFE4D6] group-hover:bg-[#E5D7C5] transition-colors flex items-center justify-center text-[#23150D] mb-2.5 shadow-sm">
+              <svg class="w-6 h-6 stroke-[#23150D]" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <span class="text-xs sm:text-sm font-semibold text-[#2D2119] leading-tight">Better<br>Progress</span>
+          </div>
+        </div>
+
+        <!-- Educational Still Life: Stack of Books & Pen Pot -->
+        <div class="relative mt-auto pt-6 pb-2 select-none">
+          <div class="absolute -top-10 right-4 sm:right-10 flex flex-col items-center text-[#382619] rotate-[-5deg]">
+            <span class="font-handwriting text-2xl sm:text-3xl font-bold leading-none tracking-wide">Today</span>
+            <span class="font-handwriting text-2xl sm:text-3xl font-bold leading-none tracking-wide -mt-1">A Better</span>
+            <span class="font-handwriting text-2xl sm:text-3xl font-bold leading-none tracking-wide -mt-1">Tomorrow</span>
+            <div class="mt-1 w-7 h-7 border-2 border-[#382619] rounded-full flex flex-col items-center justify-center relative">
+              <div class="flex gap-1.5 mb-0.5"><span class="w-1 h-1 bg-[#382619] rounded-full"></span><span class="w-1 h-1 bg-[#382619] rounded-full"></span></div>
+              <div class="w-3.5 h-1 border-b-2 border-[#382619] rounded-b-full"></div>
+            </div>
+          </div>
+
+          <div class="relative flex items-end">
+            <div class="w-64 sm:w-72 flex flex-col z-10">
+              <div class="book-spine-1 h-10 rounded-t-sm rounded-r-md px-5 flex items-center justify-between border-l-4 border-[#9C8A73] mb-[2px]">
+                <span class="font-serif italic font-semibold text-sm text-[#45362B] tracking-wide">Learn</span>
+                <span class="w-2.5 h-1 bg-[#A9977E] rounded-full"></span>
+              </div>
+              <div class="book-spine-2 h-11 rounded-sm rounded-r-md px-5 flex items-center justify-between border-l-4 border-[#8B6E4A] mb-[2px]">
+                <span class="font-serif italic font-semibold text-base text-[#38281D] tracking-wide">Practice</span>
+                <div class="h-full w-2 border-r border-[#967448] opacity-50"></div>
+              </div>
+              <div class="book-spine-3 h-12 rounded-sm rounded-r-md px-5 flex items-center justify-between border-l-4 border-[#5E432A] mb-[2px]">
+                <span class="font-serif italic font-semibold text-base text-[#F4EDE5] tracking-wide">Improve</span>
+                <span class="w-3 h-1 bg-[#6A4E32] rounded-full"></span>
+              </div>
+              <div class="book-spine-4 h-12 rounded-b-sm rounded-r-lg px-6 flex items-center justify-between border-l-4 border-[#170E08]">
+                <span class="font-serif italic font-semibold text-lg text-[#FBF7F2] tracking-wider">Grow</span>
+              </div>
+            </div>
+
+            <div class="relative ml-4 -mb-1 flex items-end z-10">
+              <div class="w-14 h-16 bg-gradient-to-b from-[#A19890] to-[#7B7067] rounded-md border-2 border-[#5C534B] shadow-inner flex items-center justify-center">
+                <div class="flex gap-1 -mt-6">
+                  <div class="w-1.5 h-12 bg-[#261710] rounded-t-sm"></div>
+                  <div class="w-2 h-14 bg-[#D89F5C] rounded-t-sm"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="h-4 w-full bg-[#B29272] rounded-t-sm shadow-md mt-0 bg-gradient-to-r from-[#947453] via-[#BA9775] to-[#7B5B37] border-t border-[#D5B593]"></div>
+        </div>
+      </section>
+
+      <!-- Right Form Column -->
+      <section class="lg:col-span-7 relative">
+        <div class="bg-white rounded-[32px] p-7 sm:p-10 lg:p-12 shadow-[0_15px_45px_-10px_rgba(45,33,24,0.08)] border border-[#ECE4D8] relative z-10">
+          
+          <div class="flex items-start sm:items-center gap-4 sm:gap-5 mb-8">
+            <div class="w-14 h-14 rounded-full bg-[#F5ECE0] flex-shrink-0 flex items-center justify-center text-[#3B2519]">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <div>
+              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-[#23150D] tracking-tight">Enrollment Form</h2>
+              <p class="text-xs sm:text-sm text-[#736358] mt-1">Fill in the details below to join SSC Students Study Circle.</p>
+            </div>
+          </div>
+
+          <form class="space-y-5" id="enrollmentForm" novalidate>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div>
+                <label class="block text-xs sm:text-sm font-semibold text-[#2F2118] mb-1.5" for="studentName">
+                  Student Name <span class="text-red-500">*</span>
+                </label>
+                <input class="form-input-custom w-full px-4 py-3 rounded-xl border border-[#DED4C7] bg-[#FCFBF9] text-[#281C14] text-sm placeholder-[#9C8F85] focus:bg-white transition-colors" 
+                       id="studentName" name="studentName" placeholder="Enter student name" required type="text">
+                <p class="error-msg hidden text-xs text-red-600 mt-1 font-medium">Please enter student name</p>
+              </div>
+
+              <div>
+                <label class="block text-xs sm:text-sm font-semibold text-[#2F2118] mb-1.5" for="studentClass">
+                  Class <span class="text-red-500">*</span>
+                </label>
+                <select class="form-input-custom w-full px-4 py-3 rounded-xl border border-[#DED4C7] bg-[#FCFBF9] text-[#281C14] text-sm focus:bg-white transition-colors cursor-pointer" 
+                        id="studentClass" name="studentClass" required>
+                  <option disabled selected value="">Select class</option>
+                  <option value="LKG">LKG</option>
+                  <option value="UKG">UKG</option>
+                  <option value="1st Class">1st Class</option>
+                  <option value="2nd Class">2nd Class</option>
+                  <option value="3rd Class">3rd Class</option>
+                  <option value="4th Class">4th Class</option>
+                  <option value="5th Class">5th Class</option>
+                  <option value="6th Class">6th Class</option>
+                  <option value="7th Class">7th Class</option>
+                  <option value="8th Class">8th Class</option>
+                  <option value="9th Class">9th Class</option>
+                  <option value="10th Class">10th Class</option>
+                </select>
+                <p class="error-msg hidden text-xs text-red-600 mt-1 font-medium">Please select a class</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs sm:text-sm font-semibold text-[#2F2118] mb-1.5" for="schoolName">
+                School Name <span class="text-red-500">*</span>
+              </label>
+              <input class="form-input-custom w-full px-4 py-3 rounded-xl border border-[#DED4C7] bg-[#FCFBF9] text-[#281C14] text-sm placeholder-[#9C8F85] focus:bg-white transition-colors" 
+                     id="schoolName" name="schoolName" placeholder="Enter school name" required type="text">
+              <p class="error-msg hidden text-xs text-red-600 mt-1 font-medium">Please enter school name</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div>
+                <label class="block text-xs sm:text-sm font-semibold text-[#2F2118] mb-1.5" for="motherName">
+                  Mother's Name <span class="text-red-500">*</span>
+                </label>
+                <input class="form-input-custom w-full px-4 py-3 rounded-xl border border-[#DED4C7] bg-[#FCFBF9] text-[#281C14] text-sm placeholder-[#9C8F85] focus:bg-white transition-colors" 
+                       id="motherName" name="motherName" placeholder="Enter mother's name" required type="text">
+                <p class="error-msg hidden text-xs text-red-600 mt-1 font-medium">Please enter mother's name</p>
+              </div>
+              <div>
+                <label class="block text-xs sm:text-sm font-semibold text-[#2F2118] mb-1.5" for="fatherName">
+                  Father's Name <span class="text-red-500">*</span>
+                </label>
+                <input class="form-input-custom w-full px-4 py-3 rounded-xl border border-[#DED4C7] bg-[#FCFBF9] text-[#281C14] text-sm placeholder-[#9C8F85] focus:bg-white transition-colors" 
+                       id="fatherName" name="fatherName" placeholder="Enter father's name" required type="text">
+                <p class="error-msg hidden text-xs text-red-600 mt-1 font-medium">Please enter father's name</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs sm:text-sm font-semibold text-[#2F2118] mb-1.5" for="phoneNumber">
+                Phone Number <span class="text-red-500">*</span>
+              </label>
+              <input class="form-input-custom w-full px-4 py-3 rounded-xl border border-[#DED4C7] bg-[#FCFBF9] text-[#281C14] text-sm placeholder-[#9C8F85] focus:bg-white transition-colors" 
+                     id="phoneNumber" maxlength="10" name="phoneNumber" placeholder="Enter 10-digit mobile number" required type="tel">
+              <p class="error-msg hidden text-xs text-red-600 mt-1 font-medium">Enter a valid 10-digit phone number</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div>
+                <label class="block text-xs sm:text-sm font-semibold text-[#2F2118] mb-1.5" for="boardSelect">
+                  Board / Curriculum <span class="text-red-500">*</span>
+                </label>
+                <select class="form-input-custom w-full px-4 py-3 rounded-xl border border-[#DED4C7] bg-[#FCFBF9] text-[#281C14] text-sm focus:bg-white transition-colors cursor-pointer" 
+                        id="boardSelect" name="boardSelect" required>
+                  <option disabled selected value="">Select board</option>
+                  <option value="CBSE">CBSE Board</option>
+                  <option value="State Board (SSC)">State Board (SSC)</option>
+                  <option value="ICSE">ICSE Board</option>
+                </select>
+                <p class="error-msg hidden text-xs text-red-600 mt-1 font-medium">Please select curriculum board</p>
+              </div>
+              <div>
+                <label class="block text-xs sm:text-sm font-semibold text-[#2F2118] mb-1.5" for="subjectSelect">
+                  Subjects <span class="text-red-500">*</span>
+                </label>
+                <select class="form-input-custom w-full px-4 py-3 rounded-xl border border-[#DED4C7] bg-[#FCFBF9] text-[#281C14] text-sm focus:bg-white transition-colors cursor-pointer" 
+                        id="subjectSelect" name="subjectSelect" required>
+                  <option disabled selected value="">Select subjects</option>
+                  <option value="All Core Subjects (Maths, Science, English)">All Core Subjects (Maths, Science, English)</option>
+                  <option value="Mathematics & Science Foundation">Mathematics & Science Foundation</option>
+                  <option value="Mathematics Only">Mathematics Only</option>
+                  <option value="Science Only">Science Only</option>
+                </select>
+                <p class="error-msg hidden text-xs text-red-600 mt-1 font-medium">Please choose subjects</p>
+              </div>
+            </div>
+
+            <div class="pt-3">
+              <button class="w-full py-4 px-6 bg-[#26160F] hover:bg-[#3B241A] text-[#FAF6F0] font-medium text-base rounded-2xl flex items-center justify-center gap-3 transition-all duration-200 shadow-md hover:shadow-lg" id="submitBtn" type="submit">
+                <span>Submit Application</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- SUCCESS MODAL -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300" id="successModal">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-[#ECE4D8] text-center transform scale-95 transition-transform duration-300" id="modalDialog">
+      <div class="w-16 h-16 bg-[#F2E8DC] text-[#4A3224] rounded-full mx-auto flex items-center justify-center mb-5 shadow-inner">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </div>
+      <h3 class="font-serif text-2xl font-bold text-[#23150D] mb-2">Application Submitted!</h3>
+      <p class="text-sm text-[#665449] leading-relaxed mb-6">
+        Thank you for enrolling in <span class="font-semibold text-[#23150D]">SSC Students Study Circle</span>. Our academic coordinator will contact you at <span class="font-semibold text-[#23150D]" id="confirmPhone"></span> within 24 hours to schedule orientation.
+      </p>
+      <div class="bg-[#FAF7F2] p-4 rounded-xl mb-6 text-left border border-[#EADBCC] text-xs space-y-1.5 text-[#5A4B41]">
+        <div><strong class="text-[#2B1B12]">Application ID:</strong> <span class="font-mono font-bold text-amber-900" id="summaryReqId"></span></div>
+        <div><strong class="text-[#2B1B12]">Student:</strong> <span id="summaryName"></span></div>
+        <div><strong class="text-[#2B1B12]">Class & Board:</strong> <span id="summaryClass"></span></div>
+        <div><strong class="text-[#2B1B12]">Chosen Stream:</strong> <span id="summarySubject"></span></div>
+      </div>
+      <button class="w-full py-3 bg-[#23150D] hover:bg-[#3D2517] text-white rounded-xl text-sm font-medium transition-colors" id="closeModalBtn">
+        Done & Return to Home
+      </button>
+    </div>
+  </div>
+
+  <footer class="bg-[#231710] text-[#D8C7B5] py-10 border-t border-[#36251A] mt-auto">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6 text-xs">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-10 bg-[#FAF7F2] rounded-xl p-1 flex items-center justify-center shadow-xs">
+          <img alt="SSC" class="max-h-full max-w-full object-contain" src="assets/images/ssc_logo.png">
+        </div>
+        <span class="font-serif font-bold text-white text-sm">SSC Students Study Circle</span>
+      </div>
+      <div class="flex items-center gap-6 text-[#C5B4A3]">
+        <a href="index.html#home" class="hover:text-white">Home</a>
+        <a href="about.html" class="hover:text-white">About</a>
+        <a href="books.html" class="hover:text-white">Books</a>
+        <a href="students.html" class="hover:text-white">Students</a>
+        <a href="classes.html" class="hover:text-white">Classes</a>
+        <a href="index.html#admin" class="hover:text-white">Admin</a>
+      </div>
+      <span class="text-[#8A7564]">© 2026 SSC Students Study Circle. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/ssc-store.js"></script>
+  <script src="assets/js/db-service.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

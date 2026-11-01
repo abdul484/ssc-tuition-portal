@@ -1,0 +1,1052 @@
+/* ==========================================================================
+   SSC Students Study Circle - Custom Stylesheet
+   Theme: Obsidian Scholastic / Warm Academic Cream & Espresso
+   ========================================================================== */
+
+:root {
+  --color-cream: #FAF7F2;
+  --color-cream-light: #FCF9F5;
+  --color-beige: #F4ECE1;
+  --color-sand: #EFE9DF;
+  --color-accent-tan: #C29B77;
+  --color-espresso: #261710;
+  --color-espresso-hover: #382216;
+  --color-muted: #705E53;
+  --color-border: #E8DDD0;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-handwriting: 'Caveat', 'Kalam', cursive;
+}
+
+/* Base Body Styles */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-espresso);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Selection Color */
+::selection {
+  background-color: #EBDCCE;
+  color: var(--color-espresso);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #F3ECE2;
+}
+::-webkit-scrollbar-thumb {
+  background: #D5C9BC;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BFAEA0;
+}
+
+/* ==========================================================================
+   Keyframe Animations & Page Transitions
+   ========================================================================== */
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0.4deg);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(0.6deg);
+  }
+}
+
+@keyframes floatSubtle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+/* Animation Utility Classes */
+.animate-float {
+  animation: floatGentle 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: floatSlow 7.5s ease-in-out infinite;
+}
+
+.animate-float-subtle {
+  animation: floatSubtle 5s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-page-enter {
+  animation: pageEnter 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger Delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Navigation Active Indicator */
+.main-nav-link {
+  position: relative;
+  display: inline-block;
+  padding: 0.375rem 0.25rem;
+  color: #705E53;
+  transition: color 0.25s ease;
+}
+
+.main-nav-link:hover {
+  color: #261710;
+}
+
+.main-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 0%;
+  height: 2.5px;
+  background-color: #261710;
+  border-radius: 9999px;
+  transform: translateX(-50%);
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.main-nav-link.active-nav {
+  color: #261710 !important;
+  font-weight: 700 !important;
+}
+
+.main-nav-link.active-nav::after {
+  width: 100%;
+}
+
+/* Mobile Nav Link Active State */
+.mobile-nav-link {
+  border-radius: 0.75rem;
+  padding: 0.625rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-link.active-nav {
+  background-color: #F4ECE1;
+  color: #261710 !important;
+  font-weight: 700;
+  border-left: 3px solid #261710;
+}
+
+/* Book Card Interactive Hover Lift & Shadow */
+.book-card-item {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-card-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 28px -6px rgba(38, 23, 16, 0.12), 0 4px 10px -2px rgba(38, 23, 16, 0.05);
+}
+
+.book-card-item:hover .book-mockup-inner {
+  transform: scale(1.025);
+  transition: transform 0.3s ease;
+}
+
+/* Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-float,
+  .animate-float-slow,
+  .animate-float-subtle,
+  .animate-page-enter {
+    animation: none !important;
+  }
+  .book-card-item:hover {
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   Design System Utilities & Shapes
+   ========================================================================== */
+
+.hero-organic-mask {
+  border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+}
+
+.custom-speech-bubble {
+  border-radius: 36px 36px 36px 10px;
+}
+
+.organic-shape-bg {
+  border-radius: 48% 52% 41% 59% / 51% 39% 61% 49%;
+}
+
+.blob-shape {
+  border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+}
+
+/* Book 3D Stack Spines */
+.book-spine-1 {
+  background: linear-gradient(180deg, #E6DAC8 0%, #D4C3AC 100%);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.7), 0 3px 6px rgba(45, 36, 30, 0.12);
+}
+
+.book-spine-2 {
+  background: linear-gradient(180deg, #D9B78F 0%, #BC9768 100%);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.5), 0 3px 6px rgba(45, 36, 30, 0.12);
+}
+
+.book-spine-3 {
+  background: linear-gradient(180deg, #AA845E 0%, #8C653F 100%);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.3), 0 3px 6px rgba(45, 36, 30, 0.15);
+}
+
+.book-spine-4 {
+  background: linear-gradient(180deg, #443226 0%, #291C14 100%);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.2), 0 5px 12px rgba(45, 36, 30, 0.25);
+}
+
+/* Form Focus Styling */
+.form-input-custom:focus {
+  border-color: #261710 !important;
+  box-shadow: 0 0 0 3px rgba(38, 23, 16, 0.12) !important;
+  outline: none;
+}
+
+/* Shadow Presets */
+.shadow-warm-card {
+  box-shadow: 0 20px 45px -12px rgba(60, 36, 21, 0.08), 0 4px 12px -2px rgba(60, 36, 21, 0.04);
+}
+
+.shadow-book-stack {
+  box-shadow: 4px 8px 24px rgba(43, 23, 19, 0.14);
+}
+
+/* Hide scrollbars for pill navigation */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Print Styles for Fee Receipts */
+@media print {
+  body {
+    background: #FFF !important;
+    color: #000 !important;
+  }
+  header, footer, nav, .no-print {
+    display: none !important;
+  }
+  .print-area {
+    display: block !important;
+    width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+   Modern 3D UI & Depth Effects (Students Portal & History Modal)
+   ========================================================================== */
+
+/* 1. Unmistakable 3D Keycap / Card Shape for Class Cards */
+.class-card-3d,
+.card-class-3d {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer !important;
+  user-select: none;
+  border: 2px solid rgba(0, 0, 0, 0.08) !important;
+  border-bottom: 6px solid rgba(0, 0, 0, 0.18) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 18px -4px rgba(0, 0, 0, 0.12),
+              inset 0 2px 0 rgba(255, 255, 255, 0.8) !important;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border 0.18s ease !important;
+  transform-style: preserve-3d;
+  transform: translateY(0);
+}
+
+.class-card-3d .class-card-badge,
+.card-class-3d .class-card-badge {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15),
+              inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+  border-radius: 12px !important;
+  transition: transform 0.18s ease;
+}
+
+/* On Hover: Lift and tilt the card in 3D space */
+.class-card-3d:hover,
+.card-class-3d:hover {
+  transform: perspective(600px) translateY(-6px) rotateX(6deg) scale(1.03) !important;
+  box-shadow: 0 16px 24px -6px rgba(0, 0, 0, 0.18),
+              inset 0 2px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* On Press: Physically compress down */
+.class-card-3d:active,
+.card-class-3d:active {
+  transform: translateY(4px) !important;
+  border-bottom-width: 2px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15),
+              inset 0 2px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Active / Selected Filter State: Physically pressed down with bold colored ring highlight */
+.class-card-3d.active-class-card,
+.card-class-3d.active-class-card {
+  transform: translateY(4px) !important;
+  border-bottom: 2px solid #261710 !important;
+  border-color: #261710 !important;
+  box-shadow: 0 0 0 3px #261710,
+              0 0 0 6px rgba(217, 182, 150, 0.85),
+              inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.class-card-3d.active-class-card:hover,
+.card-class-3d.active-class-card:hover {
+  transform: translateY(4px) scale(1.01) !important;
+  border-bottom: 2px solid #261710 !important;
+  box-shadow: 0 0 0 3px #261710,
+              0 0 0 7px rgba(217, 182, 150, 0.95),
+              inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 2. 3D Tactile Push Buttons */
+.btn-3d {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 0 #140b08,
+              0 6px 14px rgba(38, 23, 16, 0.22),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(0);
+}
+
+.btn-3d:hover {
+  box-shadow: 0 4px 0 #140b08,
+              0 8px 18px rgba(38, 23, 16, 0.28),
+              inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-3d:active {
+  transform: translateY(2px) !important;
+  box-shadow: 0 1px 0 #140b08,
+              0 2px 4px rgba(38, 23, 16, 0.15),
+              inset 0 2px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-3d-secondary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 0 #D4C5B5,
+              0 4px 8px rgba(38, 23, 16, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(0);
+}
+
+.btn-3d-secondary:hover {
+  box-shadow: 0 3px 0 #C9B8A6,
+              0 6px 12px rgba(38, 23, 16, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+  background-color: #F5EFE7;
+}
+
+.btn-3d-secondary:active {
+  transform: translateY(2px) !important;
+  box-shadow: 0 0 0 transparent,
+              inset 0 2px 4px rgba(38, 23, 16, 0.08) !important;
+}
+
+/* 3. 3D Floating Table Container & Rows */
+.table-container-3d {
+  box-shadow: 0 20px 40px -15px rgba(38, 23, 16, 0.12),
+              0 8px 16px -6px rgba(38, 23, 16, 0.06),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.row-float-3d {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.15s ease;
+  position: relative;
+}
+
+.row-float-3d:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -4px rgba(38, 23, 16, 0.09),
+              0 2px 6px -2px rgba(38, 23, 16, 0.05);
+  background-color: #FCFAF7 !important;
+  z-index: 5;
+}
+
+/* 4. 3D Embossed Glossy Badges */
+.badge-3d-class {
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8),
+              inset 0 -1px 1px rgba(0, 0, 0, 0.06),
+              0 2px 4px rgba(38, 23, 16, 0.06);
+}
+
+.badge-3d-paid {
+  background: linear-gradient(180deg, #ECFDF5 0%, #D1FAE5 100%);
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9),
+              inset 0 -1px 1px rgba(6, 95, 70, 0.12),
+              0 2px 5px rgba(16, 185, 129, 0.2);
+}
+
+.badge-3d-half {
+  background: linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%);
+  color: #92400E;
+  border: 1px solid #FDE68A;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9),
+              inset 0 -1px 1px rgba(146, 64, 14, 0.12),
+              0 2px 5px rgba(245, 158, 11, 0.2);
+}
+
+.badge-3d-unpaid {
+  background: linear-gradient(180deg, #FFF1F2 0%, #FFE4E6 100%);
+  color: #9F1239;
+  border: 1px solid #FECDD3;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9),
+              inset 0 -1px 1px rgba(159, 18, 57, 0.12),
+              0 2px 5px rgba(244, 63, 94, 0.2);
+}
+
+/* 5. 3D Perspective Modal Entrance & Shell */
+@keyframes modal3dPop {
+  0% {
+    transform: perspective(1000px) rotateX(12deg) scale(0.92) translateY(24px);
+    opacity: 0;
+  }
+  60% {
+    transform: perspective(1000px) rotateX(-2deg) scale(1.01) translateY(-3px);
+    opacity: 1;
+  }
+  100% {
+    transform: perspective(1000px) rotateX(0deg) scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-3d-shell {
+  animation: modal3dPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 25px 60px -12px rgba(38, 23, 16, 0.35),
+              0 10px 20px -6px rgba(38, 23, 16, 0.15),
+              inset 0 1px 1px rgba(255, 255, 255, 0.9),
+              inset 0 0 0 1px rgba(232, 222, 208, 0.6);
+  transform-origin: center top;
+}
+
+/* 6. 3D Recessed & Raised Stat Cards */
+.stat-card-3d-recessed {
+  background: linear-gradient(180deg, #FAF7F2 0%, #FFFFFF 100%);
+  border: 1px solid #EADBCE;
+  box-shadow: inset 0 2px 4px rgba(38, 23, 16, 0.04),
+              0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.stat-card-3d-raised {
+  box-shadow: 0 4px 8px -1px rgba(38, 23, 16, 0.07),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9),
+              inset 0 -2px 0 rgba(38, 23, 16, 0.04);
+}
+
+/* 7. Books Section - Realistic 3D Book Object Styling */
+.book-card-3d::before,
+.book-card-3d::after,
+.book-card-3d *::before,
+.book-card-3d *::after,
+.free-material-card-3d::before,
+.free-material-card-3d::after,
+.free-material-card-3d *::before,
+.free-material-card-3d *::after,
+.book-card::before,
+.book-card::after,
+.book-card *::before,
+.book-card *::after {
+  pointer-events: none !important;
+}
+
+.book-card-3d a,
+.book-card-3d button,
+.free-material-card-3d a,
+.free-material-card-3d button,
+.btn-whatsapp,
+.btn-3d-dark,
+.btn-3d-emerald,
+[data-inquire-book-id] {
+  position: relative !important;
+  z-index: 30 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+.book-card-actions,
+.free-material-actions {
+  position: relative !important;
+  z-index: 25 !important;
+  pointer-events: auto !important;
+  transform: translateZ(20px) !important;
+}
+
+.book-card-3d {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px !important;
+  border: 2px solid rgba(38, 23, 16, 0.08) !important;
+  border-bottom: 6px solid rgba(38, 23, 16, 0.18) !important;
+  border-left: 5px solid rgba(38, 23, 16, 0.22) !important; /* Simulated book spine */
+  box-shadow: 0 12px 24px -6px rgba(38, 23, 16, 0.12),
+              0 4px 8px -2px rgba(38, 23, 16, 0.06),
+              inset 0 2px 0 rgba(255, 255, 255, 0.9),
+              inset 4px 0 8px -2px rgba(0, 0, 0, 0.15) !important; /* Spine depth shadow */
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.2s ease !important;
+  transform-style: preserve-3d;
+  transform: perspective(700px) translateY(0);
+  will-change: transform, box-shadow;
+}
+
+.book-card-3d:hover {
+  transform: perspective(700px) translateY(-8px) rotateY(-6deg) rotateX(4deg) scale(1.02) !important;
+  box-shadow: -10px 24px 36px -6px rgba(38, 23, 16, 0.22),
+              0 8px 16px -4px rgba(38, 23, 16, 0.12),
+              inset 0 2px 0 rgba(255, 255, 255, 1) !important;
+  border-bottom-color: rgba(38, 23, 16, 0.28) !important;
+  border-left-color: rgba(38, 23, 16, 0.35) !important;
+}
+
+.book-card-3d:active {
+  transform: translateY(2px) scale(0.99) !important;
+  border-bottom-width: 2px !important;
+}
+
+.free-material-card-3d {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px !important;
+  border: 2px solid rgba(38, 23, 16, 0.08) !important;
+  border-bottom: 6px solid rgba(38, 23, 16, 0.18) !important;
+  border-left: 5px solid rgba(16, 185, 129, 0.4) !important; /* Emerald spine for free resources */
+  box-shadow: 0 10px 20px -4px rgba(38, 23, 16, 0.1),
+              inset 0 2px 0 rgba(255, 255, 255, 0.9),
+              inset 4px 0 8px -2px rgba(16, 185, 129, 0.12) !important;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transform-style: preserve-3d;
+  transform: perspective(700px) translateY(0);
+}
+
+.free-material-card-3d:hover {
+  transform: perspective(700px) translateY(-7px) rotateY(-5deg) rotateX(3deg) scale(1.02) !important;
+  box-shadow: -8px 22px 32px -6px rgba(16, 185, 129, 0.2),
+              0 8px 16px -4px rgba(38, 23, 16, 0.1),
+              inset 0 2px 0 rgba(255, 255, 255, 1) !important;
+  border-bottom-color: rgba(16, 185, 129, 0.5) !important;
+}
+
+/* 8. Raised 3D Glossy Badges */
+.badge-3d-glossy {
+  box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.15),
+              inset 0 1px 1px rgba(255, 255, 255, 0.8),
+              inset 0 -1px 1px rgba(0, 0, 0, 0.12) !important;
+  border-radius: 9999px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* 9. Classes Section - 3D Tiered Batch Cards */
+.class-batch-card-3d {
+  position: relative;
+  background: #FAF7F2;
+  border-radius: 18px !important;
+  border: 2px solid rgba(38, 23, 16, 0.08) !important;
+  border-bottom: 5px solid rgba(38, 23, 16, 0.16) !important;
+  box-shadow: 0 12px 24px -6px rgba(38, 23, 16, 0.1),
+              inset 0 2px 0 rgba(255, 255, 255, 0.85) !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.2s ease !important;
+  transform: translateY(0);
+}
+
+.class-batch-card-3d:hover {
+  transform: perspective(800px) translateY(-7px) scale(1.025) !important;
+  box-shadow: 0 22px 34px -8px rgba(38, 23, 16, 0.18),
+              0 0 24px var(--batch-glow, rgba(156, 121, 92, 0.25)),
+              inset 0 2px 0 rgba(255, 255, 255, 1) !important;
+  border-bottom-color: rgba(38, 23, 16, 0.24) !important;
+}
+
+.badge-3d-inset {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08),
+              0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 9999px !important;
+}
+
+.fee-pill-3d {
+  background: linear-gradient(180deg, #FDFBF8 0%, #F5ECE1 100%);
+  border: 1px solid #E4D5C5;
+  box-shadow: inset 0 1px 1px #ffffff,
+              0 2px 4px rgba(38, 23, 16, 0.08);
+  border-radius: 9999px;
+  font-weight: 800;
+}
+
+/* 10. Home & About Sections - 3D Feature Keycaps & Tactile Hero Buttons */
+.feature-card-3d {
+  position: relative;
+  background: #FAF7F2;
+  border: 2px solid rgba(38, 23, 16, 0.08) !important;
+  border-bottom: 5px solid rgba(38, 23, 16, 0.16) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 10px 20px -4px rgba(38, 23, 16, 0.1),
+              inset 0 2px 0 rgba(255, 255, 255, 0.9) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.2s ease !important;
+}
+
+.feature-card-3d:hover {
+  transform: perspective(600px) translateY(-5px) scale(1.025) !important;
+  box-shadow: 0 18px 28px -6px rgba(38, 23, 16, 0.16),
+              inset 0 2px 0 rgba(255, 255, 255, 1) !important;
+  border-bottom-color: rgba(38, 23, 16, 0.24) !important;
+}
+
+.btn-3d-hero {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #1E1713 !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-bottom: 4px solid #0D0A08 !important;
+  box-shadow: 0 4px 0 #0D0A08, 0 8px 16px rgba(0, 0, 0, 0.15),
+              inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+  border-radius: 9999px !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  user-select: none !important;
+}
+
+.btn-3d-hero:hover {
+  background-color: #2A1F1A !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 5px 0 #0D0A08, 0 12px 20px rgba(0, 0, 0, 0.22),
+              inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+}
+
+.btn-3d-hero:active {
+  transform: translateY(3px) !important;
+  border-bottom-width: 1px !important;
+  box-shadow: 0 1px 0 #0D0A08, 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-3d-hero span {
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px !important;
+}
+
+.btn-3d-hero svg {
+  color: #FFFFFF !important;
+  stroke: currentColor !important;
+}
+
+/* 11. Admin Portal - Responsive 3D KPI Stat Cards (Overview & Fee Ledger) */
+body.view-admin #header-enroll-btn,
+body.view-admin #mobile-enroll-btn,
+body.view-admin header a[href="#enrollment"],
+body.view-admin header .btn-3d-hero,
+body.view-admin #mobileMenu a[href="#enrollment"],
+body.view-admin #mobileMenu .btn-3d-hero {
+  display: none !important;
+}
+
+.admin-stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+  gap: 16px !important;
+  width: 100% !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.admin-stat-card-3d {
+  padding: 22px 26px !important;
+  box-sizing: border-box !important;
+  min-height: 125px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  background: #ffffff !important;
+  border-radius: 18px !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
+  border-bottom: 5px solid rgba(0, 0, 0, 0.16) !important;
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08) !important;
+  overflow: visible !important;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.2s ease !important;
+  cursor: pointer;
+  text-decoration: none !important;
+}
+
+.admin-stat-card-3d > * {
+  margin-left: 0 !important;
+  padding-left: 4px !important;
+}
+
+.admin-stat-card-3d:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 14px 26px -6px rgba(0, 0, 0, 0.12) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.22) !important;
+}
+
+.admin-stat-card-3d:active {
+  transform: translateY(2px) !important;
+  border-bottom-width: 2px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+}
+
+.admin-stat-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  padding-left: 4px !important;
+}
+
+.admin-stat-label {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  color: #6B7280 !important;
+  text-transform: uppercase !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  margin: 0 !important;
+}
+
+.admin-stat-icon-3d {
+  width: 34px !important;
+  height: 34px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08),
+              inset 0 1px 1px rgba(255, 255, 255, 0.7) !important;
+}
+
+.admin-stat-value {
+  font-size: 1.85rem !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  color: #111827 !important;
+  font-family: inherit !important;
+  letter-spacing: -0.02em !important;
+  margin: 2px 0 !important;
+  margin-left: 0 !important;
+  padding-left: 4px !important;
+  word-break: break-word !important;
+}
+
+.admin-stat-subtitle {
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  color: #059669 !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  padding-left: 4px !important;
+}
+
+.admin-stat-subtitle.text-muted {
+  color: #6B7280 !important;
+}
+.admin-stat-subtitle.text-amber {
+  color: #B45309 !important;
+}
+.admin-stat-subtitle.text-red {
+  color: #DC2626 !important;
+}
+.admin-stat-subtitle.text-emerald {
+  color: #059669 !important;
+}
+
+.badge-3d-capsule {
+  display: inline-flex;
+  align-items: center;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9),
+              inset 0 -1px 1px rgba(0, 0, 0, 0.1),
+              0 2px 5px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 9999px !important;
+  font-weight: 800 !important;
+}
+
+.btn-3d-tactile-sm {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 3px solid rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.12s ease !important;
+  cursor: pointer;
+}
+
+.btn-3d-tactile-sm:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+.btn-3d-tactile-sm:active {
+  transform: translateY(2px) !important;
+  border-bottom-width: 1px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* WhatsApp Action Button with Stable Rendering (Zero layout jitter) */
+.btn-whatsapp {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #059669 !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  border-bottom: 4px solid #065F46 !important;
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  border-radius: 12px !important;
+  /* Hardware acceleration & isolation from parent 3D perspective tilt */
+  transform: translateZ(0) !important;
+  will-change: filter, background-color, box-shadow !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  transition: background-color 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  user-select: none !important;
+}
+
+/* NO layout-shifting translateY on hover - smooth brightness & color shift */
+.btn-whatsapp:hover {
+  background-color: #047857 !important;
+  filter: brightness(1.08) !important;
+  transform: translateZ(0) !important;
+  box-shadow: 0 6px 14px rgba(5, 150, 105, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Tactile compression ONLY on physical active click */
+.btn-whatsapp:active {
+  transform: translateY(2px) translateZ(0) !important;
+  border-bottom-width: 2px !important;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25) !important;
+  filter: brightness(0.96) !important;
+}
+
+/* Disable pointer-events on children so mouseover doesn't bounce between SVG/span and parent */
+.btn-whatsapp svg,
+.btn-whatsapp span,
+.btn-whatsapp * {
+  pointer-events: none !important;
+}
+
+/* Tactile 3D Buttons for Books and CTAs (Emerald and Dark) */
+.btn-3d-emerald {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #059669 !important;
+  border-bottom: 4px solid #065F46 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  border-radius: 12px !important;
+  transform: translateZ(0) !important;
+  will-change: filter, background-color, box-shadow !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  transition: background-color 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.btn-3d-emerald:hover {
+  background-color: #047857 !important;
+  filter: brightness(1.08) !important;
+  transform: translateZ(0) !important;
+  box-shadow: 0 6px 14px rgba(5, 150, 105, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+.btn-3d-emerald:active {
+  transform: translateY(2px) translateZ(0) !important;
+  border-bottom-width: 2px !important;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2) !important;
+}
+
+.btn-3d-emerald * {
+  pointer-events: none !important;
+}
+
+.btn-3d-dark {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #261710 !important;
+  border-bottom: 4px solid #140b08 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(38, 23, 16, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+  border-radius: 12px !important;
+  transform: translateZ(0) !important;
+  will-change: filter, background-color, box-shadow !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  transition: background-color 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.btn-3d-dark:hover {
+  background-color: #1a0f0a !important;
+  filter: brightness(1.1) !important;
+  transform: translateZ(0) !important;
+  box-shadow: 0 6px 14px rgba(38, 23, 16, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+.btn-3d-dark:active {
+  transform: translateY(2px) translateZ(0) !important;
+  border-bottom-width: 2px !important;
+  box-shadow: 0 1px 3px rgba(38, 23, 16, 0.2) !important;
+}
+
+.btn-3d-dark * {
+  pointer-events: none !important;
+}
+
+.btn-3d-amber {
+  background: #F59E0B;
+  border-bottom: 4px solid #B45309 !important;
+  color: #261710;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.12s ease;
+}
+
+.btn-3d-amber:hover {
+  background: #D97706;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(245, 158, 11, 0.4);
+}
+
+.btn-3d-amber:active {
+  transform: translateY(2px) !important;
+  border-bottom-width: 1px !important;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.2) !important;
+}

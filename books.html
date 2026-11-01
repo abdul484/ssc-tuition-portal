@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Books & Study Materials - SSC Students Study Circle</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cream: '#FAF7F2',
+              dark: '#261710',
+              muted: '#705E53',
+              border: '#E8DDD0',
+              soft: '#F4ECE1'
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            handwriting: ['"Caveat"', 'cursive']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="assets/css/custom.css">
+</head>
+<body class="bg-[#FAF7F2] text-brand-dark font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Main Navigation Header (Exact Order: Home | About | Books | Students | Classes | Admin) -->
+  <header class="w-full bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-40 border-b border-brand-border/60">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">
+      <a class="flex items-center gap-3.5 group" href="index.html#home">
+        <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+          <img alt="SSC Logo" class="w-full h-full object-contain" src="assets/images/ssc_logo.png">
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif font-black tracking-tight text-2xl leading-none text-brand-dark">SSC</span>
+          <span class="text-[9.5px] uppercase tracking-[0.18em] font-semibold text-brand-muted mt-1">Students Study Circle</span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8 lg:gap-10">
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="index.html#home">Home</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="about.html">About</a>
+        <a class="text-sm font-semibold text-brand-dark border-b-2 border-brand-dark py-1" href="books.html">Books</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="students.html">Students</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="classes.html">Classes</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="index.html#admin">Admin</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a class="btn-3d-hero inline-flex items-center gap-2 text-white text-sm font-medium px-6 py-3 rounded-full" href="enrollment.html">
+          <span>Enroll Now</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Books Page Content -->
+  <main class="py-12 flex-1" id="books">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12">
+      
+      <!-- Back Link -->
+      <div class="mb-6">
+        <a href="index.html#home" class="inline-flex items-center text-xs font-semibold uppercase tracking-wider text-brand-muted hover:text-brand-dark transition gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+          Back to Home
+        </a>
+      </div>
+
+      <!-- Hero Banner -->
+      <div class="bg-[#FAF5EE] rounded-3xl p-8 lg:p-12 border border-[#F0EBE1] mb-10 overflow-hidden relative shadow-xs">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7">
+            <p class="text-xs font-bold tracking-[0.25em] text-[#A68F80] uppercase mb-3">STUDY BETTER</p>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-brand-dark leading-[1.12] mb-4">
+              Books for <span class="font-serif">Bright Futures</span>
+            </h1>
+            <p class="text-base text-brand-muted leading-relaxed mb-8 max-w-lg">
+              Get the right books for your class with trusted content and affordable prices. Pick up at our tuition center or inquire directly via WhatsApp.
+            </p>
+            <div class="flex flex-wrap items-center gap-6 sm:gap-9">
+              <div class="flex flex-col items-center text-center">
+                <div class="w-12 h-12 rounded-full bg-[#EFE4D6] flex items-center justify-center text-brand-dark mb-2">
+                  <svg class="w-6 h-6 stroke-[1.8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <span class="text-xs font-semibold text-brand-dark leading-tight">Class Wise<br>Books</span>
+              </div>
+              <div class="flex flex-col items-center text-center">
+                <div class="w-12 h-12 rounded-full bg-[#EFE4D6] flex items-center justify-center text-brand-dark mb-2">
+                  <svg class="w-6 h-6 stroke-[1.8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <span class="text-xs font-semibold text-brand-dark leading-tight">Quality<br>Content</span>
+              </div>
+              <div class="flex flex-col items-center text-center">
+                <div class="w-12 h-12 rounded-full bg-[#EFE4D6] flex items-center justify-center text-brand-dark mb-2">
+                  <svg class="w-6 h-6 stroke-[1.8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <span class="text-xs font-semibold text-brand-dark leading-tight">Affordable<br>Prices</span>
+              </div>
+            </div>
+          </div>
+          <div class="lg:col-span-5 flex flex-col items-end justify-center">
+            <div class="flex items-center gap-2 mb-3 mr-4 select-none">
+              <div class="text-brand-dark font-handwriting text-xl leading-none text-right">
+                <span class="block text-[15px] -rotate-3 text-[#2B1713]/60">//</span>
+                Good<br>&nbsp;&nbsp;Books<br>&nbsp;&nbsp;&nbsp;&nbsp;Better<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Results
+              </div>
+              <div class="w-8 h-8 rounded-full border border-brand-dark flex items-center justify-center -rotate-6">
+                <svg class="w-5 h-5 text-brand-dark" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M9 10h.01M15 10h.01" stroke-linecap="round" stroke-width="2.5"></path><path d="M8.5 14.5c1.2 1.5 5.8 1.5 7 0" stroke-linecap="round"></path></svg>
+              </div>
+            </div>
+            <div class="w-64 flex flex-col items-center">
+              <div class="w-[88%] h-9 bg-[#E6D4BE] border-t border-l border-[#D6C1A7] rounded-[4px] shadow-sm flex items-center px-4 font-serif text-brand-dark font-semibold text-sm">Learn</div>
+              <div class="w-[94%] h-10 bg-[#DFCAAE] border-t border-l border-[#CFB799] rounded-[4px] shadow-sm flex items-center px-4 font-serif text-brand-dark font-semibold text-sm -mt-1">Practice</div>
+              <div class="w-[98%] h-11 bg-[#B78E65] border-t border-l border-[#A37B53] rounded-[4px] shadow-md flex items-center px-4 font-serif text-white font-semibold text-sm -mt-1">Improve</div>
+              <div class="w-full h-12 bg-[#4A3B32] border-t border-l border-[#3D2F27] rounded-[5px] shadow-lg flex items-center px-4 font-serif text-[#F4ECE3] font-semibold text-base -mt-1">Grow</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Class Filters -->
+      <div class="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-4 mb-7 text-sm font-medium no-scrollbar">
+        <button class="book-filter-pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-dark text-white shadow-sm flex-shrink-0 cursor-pointer" data-class="All Books">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          <span class="font-semibold text-xs tracking-wide">All Books</span>
+        </button>
+        <button class="book-filter-pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-brand-dark border border-[#E8DEC8] flex-shrink-0 transition" data-class="LKG & UKG"><span class="text-xs font-medium">LKG & UKG</span></button>
+        <button class="book-filter-pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-brand-dark border border-[#E8DEC8] flex-shrink-0 transition" data-class="2nd Class"><span class="text-xs font-medium">2nd Class</span></button>
+        <button class="book-filter-pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-brand-dark border border-[#E8DEC8] flex-shrink-0 transition" data-class="3rd Class"><span class="text-xs font-medium">3rd Class</span></button>
+        <button class="book-filter-pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-brand-dark border border-[#E8DEC8] flex-shrink-0 transition" data-class="4th Class"><span class="text-xs font-medium">4th Class</span></button>
+        <button class="book-filter-pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-brand-dark border border-[#E8DEC8] flex-shrink-0 transition" data-class="5th Class"><span class="text-xs font-medium">5th Class</span></button>
+        <button class="book-filter-pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-brand-dark border border-[#E8DEC8] flex-shrink-0 transition" data-class="6th Class"><span class="text-xs font-medium">6th Class</span></button>
+        <button class="book-filter-pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-brand-dark border border-[#E8DEC8] flex-shrink-0 transition" data-class="7th Class"><span class="text-xs font-medium">7th Class</span></button>
+        <button class="book-filter-pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 hover:bg-white text-brand-dark border border-[#E8DEC8] flex-shrink-0 transition" data-class="10th Class"><span class="text-xs font-medium">10th Class</span></button>
+      </div>
+
+      <!-- Main Layout: Product Cards Grid (9 Cols) + WhatsApp Order/Pickup Drawer (3 Cols) -->
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start mb-16">
+        <div class="xl:col-span-9 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" id="books-grid-container"></div>
+        
+        <div class="xl:col-span-3 bg-white rounded-2xl p-6 border border-[#EBE3D8] shadow-sm sticky top-28">
+          <div class="flex items-center justify-between pb-4 border-b border-[#F0EBE1]">
+            <h3 class="text-base font-bold text-brand-dark">Inquiry Selection <span id="selected-books-count" class="font-normal text-brand-muted">(2)</span></h3>
+            <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Local Center</span>
+          </div>
+
+          <div class="divide-y divide-[#F0EBE1] max-h-72 overflow-y-auto" id="selected-books-list"></div>
+
+          <div class="pt-4 pb-4 border-t border-[#F0EBE1] flex items-center justify-between">
+            <span class="text-sm font-semibold text-brand-dark">Estimated Total</span>
+            <span class="text-lg font-bold text-brand-dark" id="selected-books-total">₹530</span>
+          </div>
+
+          <a id="whatsapp-proceed-btn" href="#" target="_blank" rel="noopener noreferrer" 
+             class="btn-whatsapp w-full py-3 px-4 rounded-xl text-white flex items-center justify-center gap-2 text-xs font-semibold mb-4 text-center">
+            <span>Inquire & Reserve via WhatsApp</span>
+          </a>
+
+          <div class="rounded-xl p-3 bg-[#F8EFE4] border border-[#ECDCC9] flex items-start gap-3">
+            <div class="p-1.5 rounded-lg bg-[#EFE3D3] text-brand-dark flex-shrink-0 mt-0.5">
+              <svg class="w-5 h-5 stroke-[1.8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25H6.75A2.25 2.25 0 004.5 9.75v6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <div>
+              <h5 class="text-xs font-bold text-brand-dark leading-tight">Local Pickup Available</h5>
+              <p class="text-[11px] text-brand-muted mt-0.5 leading-snug">Collect physical books directly at our tuition center between 5:00 PM – 7:30 PM (or until 8:30 PM on activity days).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Free Study Materials Download Section -->
+      <div class="mt-8 pt-10 border-t border-[#E8DEC8]">
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span class="text-xs font-bold tracking-widest text-[#9C795C] uppercase">COMPLIMENTARY ACADEMIC RESOURCES</span>
+            <h3 class="font-serif text-2xl sm:text-3xl font-bold text-brand-dark mt-1">Free Study Materials & Notes</h3>
+          </div>
+          <p class="text-xs text-brand-muted max-w-sm">Direct, functional downloads of verified syllabi, key formulas, and sample grammar worksheets.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5" id="free-materials-container"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="bg-[#231710] text-[#D8C7B5] py-10 border-t border-[#36251A] mt-auto">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6 text-xs">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-10 bg-[#FAF7F2] rounded-xl p-1 flex items-center justify-center shadow-xs">
+          <img alt="SSC" class="max-h-full max-w-full object-contain" src="assets/images/ssc_logo.png">
+        </div>
+        <span class="font-serif font-bold text-white text-sm">SSC Students Study Circle</span>
+      </div>
+      <div class="flex items-center gap-6 text-[#C5B4A3]">
+        <a href="index.html#home" class="hover:text-white">Home</a>
+        <a href="about.html" class="hover:text-white">About</a>
+        <a href="books.html" class="hover:text-white font-semibold text-white">Books</a>
+        <a href="students.html" class="hover:text-white">Students</a>
+        <a href="classes.html" class="hover:text-white">Classes</a>
+        <a href="index.html#admin" class="hover:text-white">Admin</a>
+      </div>
+      <span class="text-[#8A7564]">© 2026 SSC Students Study Circle. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/ssc-store.js"></script>
+  <script src="assets/js/db-service.js"></script>
+  <script src="assets/js/books-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

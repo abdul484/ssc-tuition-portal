@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Students Management - SSC Students Study Circle</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cream: '#FAF7F2',
+              dark: '#261710',
+              muted: '#705E53',
+              border: '#E8DDD0',
+              soft: '#F4ECE1'
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            handwriting: ['"Caveat"', 'cursive']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="assets/css/custom.css">
+  <style>
+    /* Unmistakable 3D Keycap / Card Shape for Class Summary Cards */
+    .class-card-3d,
+    .card-class-3d {
+      position: relative;
+      display: flex;
+      align-items: center;
+      cursor: pointer !important;
+      user-select: none;
+      border: 2px solid rgba(0, 0, 0, 0.08) !important;
+      border-bottom: 6px solid rgba(0, 0, 0, 0.18) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 10px 18px -4px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.8) !important;
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), border 0.18s ease !important;
+      transform-style: preserve-3d;
+      transform: translateY(0);
+    }
+    .class-card-3d .class-card-badge,
+    .card-class-3d .class-card-badge {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+      border-radius: 12px !important;
+      transition: transform 0.18s ease;
+    }
+    .class-card-3d:hover,
+    .card-class-3d:hover {
+      transform: perspective(600px) translateY(-6px) rotateX(6deg) scale(1.03) !important;
+      box-shadow: 0 16px 24px -6px rgba(0, 0, 0, 0.18), inset 0 2px 0 rgba(255, 255, 255, 0.9) !important;
+    }
+    .class-card-3d:active,
+    .card-class-3d:active {
+      transform: translateY(4px) !important;
+      border-bottom-width: 2px !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 2px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+    .class-card-3d.active-class-card,
+    .card-class-3d.active-class-card {
+      transform: translateY(4px) !important;
+      border-bottom: 2px solid #261710 !important;
+      border-color: #261710 !important;
+      box-shadow: 0 0 0 3px #261710, 0 0 0 6px rgba(217, 182, 150, 0.85), inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+    .class-card-3d.active-class-card:hover,
+    .card-class-3d.active-class-card:hover {
+      transform: translateY(4px) scale(1.01) !important;
+      border-bottom: 2px solid #261710 !important;
+      box-shadow: 0 0 0 3px #261710, 0 0 0 7px rgba(217, 182, 150, 0.95), inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+  </style>
+</head>
+<body class="bg-[#FAF7F2] text-brand-dark font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Admin Bar -->
+  <div id="active-admin-banner" class="hidden bg-[#261710] text-[#E8DFD3] px-6 py-2 text-xs border-b border-[#3E281D] z-50 sticky top-0">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Administrator Session Active: <strong id="active-admin-user-text" class="text-white">Center Director</strong></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <button onclick="adminLogout()" class="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[11px] font-medium transition">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header (Exact Order: Home | About | Books | Students | Classes | Admin) -->
+  <header class="w-full bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-40 border-b border-brand-border/60">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">
+      <a class="flex items-center gap-3.5 group" href="index.html#home">
+        <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+          <img alt="SSC Logo" class="w-full h-full object-contain" src="assets/images/ssc_logo.png">
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif font-black tracking-tight text-2xl leading-none text-brand-dark">SSC</span>
+          <span class="text-[9.5px] uppercase tracking-[0.18em] font-semibold text-brand-muted mt-1">Students Study Circle</span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8 lg:gap-10">
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="index.html#home">Home</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="about.html">About</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="books.html">Books</a>
+        <a class="text-sm font-semibold text-brand-dark border-b-2 border-brand-dark py-1" href="students.html">Students</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="classes.html">Classes</a>
+        <a class="text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors py-1" href="index.html#admin">Admin</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a class="btn-3d-hero inline-flex items-center gap-2 px-6 py-3 rounded-full" href="enrollment.html">
+          <span>Enroll Now</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Students Management Content -->
+  <main class="py-12 flex-1" id="students">
+    <div class="max-w-[1400px] w-full mx-auto px-6 lg:px-10">
+      
+      <!-- Back Link -->
+      <div class="mb-6">
+        <a href="index.html#home" class="inline-flex items-center text-xs font-semibold uppercase tracking-wider text-brand-muted hover:text-brand-dark transition gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+          Back to Home
+        </a>
+      </div>
+
+      <!-- Title & Artwork Banner -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-transparent">
+        <div class="max-w-2xl">
+          <h1 class="font-serif text-4xl lg:text-5xl font-bold text-[#261710] tracking-tight mb-2.5">Students</h1>
+          <p class="text-[#68584E] text-base lg:text-[17px] font-normal">
+            Manage your tuition students, view details and payment history.
+          </p>
+        </div>
+
+        <div class="mt-4 md:mt-0 relative flex items-center justify-end select-none pointer-events-none pr-4">
+          <div class="relative w-64 h-24 lg:w-72 lg:h-28 flex items-center justify-end">
+            <div class="absolute inset-0 bg-[#F2EAE0] opacity-80 rounded-[45%_55%_65%_35%/50%_60%_40%_50%] transform rotate-3"></div>
+            <div class="relative z-10 flex items-center gap-4 px-6">
+              <svg class="w-12 h-14 text-[#B89F87] transform -rotate-12 stroke-current fill-current" viewBox="0 0 24 32">
+                <path d="M12 2C12 2 13 8 9 12C5 16 1 15 1 15C1 15 6 20 12 18C12 21 11.5 27 11 31H13C12.5 27 12.2 21 12.2 18C18.2 20 23.2 15 23.2 15C23.2 15 19.2 16 15.2 12C11.2 8 12 2 12 2Z" fill="currentColor" opacity="0.8"></path>
+              </svg>
+              <div class="flex flex-col text-left font-handwriting text-[#3D2C22] leading-[1.1]">
+                <span class="text-xl lg:text-2xl font-bold tracking-wide italic">/Today</span>
+                <span class="text-lg lg:text-xl font-bold pl-2 italic">A Better</span>
+                <div class="flex items-center gap-2 pl-4">
+                  <span class="text-lg lg:text-xl font-bold italic">Tomorrow</span>
+                  <svg class="w-6 h-6 text-[#3D2C22]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M8 10h.01M16 10h.01"></path><path d="M8.5 15.5C9.5 17 14.5 17 15.5 15.5"></path></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Metric Cards (LKG to Class 10) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3 my-6">
+        <!-- Total Students -->
+        <button type="button" class="class-card-3d active-class-card bg-[#F8F3EC] p-3 col-span-2 sm:col-span-1 text-left cursor-pointer transition-all" data-class-target="all" onclick="filterByClassCard('all')">
+          <div class="class-card-badge w-10 h-10 rounded-xl bg-[#EFE6DC] flex items-center justify-center shrink-0 text-[#261710] mr-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </div>
+          <div>
+            <span class="block text-[11px] text-[#705E53] font-medium leading-none mb-1">Total (LKG-10)</span>
+            <span class="text-lg font-bold text-[#261710]" id="total-count-badge">12</span>
+          </div>
+        </button>
+
+        <!-- LKG -->
+        <button type="button" class="class-card-3d bg-pink-50/90 p-3 text-left cursor-pointer transition-all" data-class-target="LKG" onclick="filterByClassCard('LKG')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-pink-100 flex items-center justify-center shrink-0 text-pink-700 text-xs font-bold mr-2.5">LKG</div>
+          <div>
+            <span class="block text-[11px] text-pink-900 font-medium leading-none mb-1">LKG</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-lkg">1</strong></span>
+          </div>
+        </button>
+
+        <!-- UKG -->
+        <button type="button" class="class-card-3d bg-purple-50/90 p-3 text-left cursor-pointer transition-all" data-class-target="UKG" onclick="filterByClassCard('UKG')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center shrink-0 text-purple-700 text-xs font-bold mr-2.5">UKG</div>
+          <div>
+            <span class="block text-[11px] text-purple-900 font-medium leading-none mb-1">UKG</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-ukg">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 1st Class -->
+        <button type="button" class="class-card-3d bg-emerald-50/90 p-3 text-left cursor-pointer transition-all" data-class-target="1st Class" onclick="filterByClassCard('1st Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-700 text-xs font-bold mr-2.5">1st</div>
+          <div>
+            <span class="block text-[11px] text-emerald-900 font-medium leading-none mb-1">1st Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-1st">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 2nd Class -->
+        <button type="button" class="class-card-3d bg-[#FFF5F5] p-3 text-left cursor-pointer transition-all" data-class-target="2nd Class" onclick="filterByClassCard('2nd Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-[#FEE2E2] flex items-center justify-center shrink-0 text-[#E11D48] text-xs font-bold mr-2.5">2nd</div>
+          <div>
+            <span class="block text-[11px] text-[#9F1239] font-medium leading-none mb-1">2nd Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-2nd">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 3rd Class -->
+        <button type="button" class="class-card-3d bg-[#F0FDF4] p-3 text-left cursor-pointer transition-all" data-class-target="3rd Class" onclick="filterByClassCard('3rd Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-[#DCFCE7] flex items-center justify-center shrink-0 text-[#16A34A] text-xs font-bold mr-2.5">3rd</div>
+          <div>
+            <span class="block text-[11px] text-[#166534] font-medium leading-none mb-1">3rd Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-3rd">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 4th Class -->
+        <button type="button" class="class-card-3d bg-[#F0F9FF] p-3 text-left cursor-pointer transition-all" data-class-target="4th Class" onclick="filterByClassCard('4th Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-[#E0F2FE] flex items-center justify-center shrink-0 text-[#0284C7] text-xs font-bold mr-2.5">4th</div>
+          <div>
+            <span class="block text-[11px] text-[#075985] font-medium leading-none mb-1">4th Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-4th">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 5th Class -->
+        <button type="button" class="class-card-3d bg-[#F5F3FF] p-3 text-left cursor-pointer transition-all" data-class-target="5th Class" onclick="filterByClassCard('5th Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-[#EDE9FE] flex items-center justify-center shrink-0 text-[#7C3AED] text-xs font-bold mr-2.5">5th</div>
+          <div>
+            <span class="block text-[11px] text-[#5B21B6] font-medium leading-none mb-1">5th Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-5th">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 6th Class -->
+        <button type="button" class="class-card-3d bg-[#FFFBEB] p-3 text-left cursor-pointer transition-all" data-class-target="6th Class" onclick="filterByClassCard('6th Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-[#FEF3C7] flex items-center justify-center shrink-0 text-[#D97706] text-xs font-bold mr-2.5">6th</div>
+          <div>
+            <span class="block text-[11px] text-[#92400E] font-medium leading-none mb-1">6th Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-6th">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 7th Class -->
+        <button type="button" class="class-card-3d bg-[#FFF7ED] p-3 text-left cursor-pointer transition-all" data-class-target="7th Class" onclick="filterByClassCard('7th Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-[#FFEDD5] flex items-center justify-center shrink-0 text-[#EA580C] text-xs font-bold mr-2.5">7th</div>
+          <div>
+            <span class="block text-[11px] text-[#9A3412] font-medium leading-none mb-1">7th Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-7th">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 8th Class -->
+        <button type="button" class="class-card-3d bg-teal-50/90 p-3 text-left cursor-pointer transition-all" data-class-target="8th Class" onclick="filterByClassCard('8th Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-teal-100 flex items-center justify-center shrink-0 text-teal-700 text-xs font-bold mr-2.5">8th</div>
+          <div>
+            <span class="block text-[11px] text-teal-900 font-medium leading-none mb-1">8th Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-8th">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 9th Class -->
+        <button type="button" class="class-card-3d bg-indigo-50/90 p-3 text-left cursor-pointer transition-all" data-class-target="9th Class" onclick="filterByClassCard('9th Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-700 text-xs font-bold mr-2.5">9th</div>
+          <div>
+            <span class="block text-[11px] text-indigo-900 font-medium leading-none mb-1">9th Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-9th">1</strong></span>
+          </div>
+        </button>
+
+        <!-- 10th Class -->
+        <button type="button" class="class-card-3d bg-amber-50 p-3 text-left cursor-pointer transition-all" data-class-target="10th Class" onclick="filterByClassCard('10th Class')">
+          <div class="class-card-badge w-9 h-9 rounded-xl bg-amber-200 flex items-center justify-center shrink-0 text-amber-900 text-xs font-bold mr-2.5">10th</div>
+          <div>
+            <span class="block text-[11px] text-amber-950 font-bold leading-none mb-1">10th Class</span>
+            <span class="text-xs text-[#705E53]"><strong class="text-base font-bold text-[#261710]" id="badge-count-10th">1</strong></span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-6 items-center">
+        <div class="md:col-span-6 relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8C7D73]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          </div>
+          <input class="w-full bg-white border border-[#E3D9CE] rounded-xl pl-11 pr-4 py-3 text-sm placeholder-[#9C8F85] text-[#261710] focus:ring-2 focus:ring-[#261710] focus:border-transparent outline-none transition" 
+                 id="student-search-input" placeholder="Search by name, phone number, or school..." type="text">
+        </div>
+
+        <div class="md:col-span-3">
+          <select class="w-full bg-white border border-[#E3D9CE] rounded-xl px-4 py-3 text-sm text-[#261710] font-medium focus:ring-2 focus:ring-[#261710] cursor-pointer" id="class-filter-select">
+            <option value="all">All Classes (LKG - 10th)</option>
+            <option value="LKG">LKG</option>
+            <option value="UKG">UKG</option>
+            <option value="1st Class">1st Class</option>
+            <option value="2nd Class">2nd Class</option>
+            <option value="3rd Class">3rd Class</option>
+            <option value="4th Class">4th Class</option>
+            <option value="5th Class">5th Class</option>
+            <option value="6th Class">6th Class</option>
+            <option value="7th Class">7th Class</option>
+            <option value="8th Class">8th Class</option>
+            <option value="9th Class">9th Class</option>
+            <option value="10th Class">10th Class</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-3">
+          <select class="w-full bg-white border border-[#E3D9CE] rounded-xl px-4 py-3 text-sm text-[#261710] font-medium focus:ring-2 focus:ring-[#261710] cursor-pointer" id="status-filter-select">
+            <option value="all">All Students</option>
+            <option value="paid">Paid (Current Month)</option>
+            <option value="half-paid">Half Paid</option>
+            <option value="unpaid">Unpaid / Due</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Container (3D Card Shell) -->
+      <div class="table-container-3d bg-white rounded-2xl border border-[#EDE4D9] shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-[#261710] border-collapse">
+            <thead>
+              <tr class="bg-[#F8F3EC] border-b border-[#EDE4D9] text-xs font-semibold text-[#4F3F35]">
+                <th class="py-4 px-6 w-16 text-left" scope="col">S.No</th>
+                <th class="py-4 px-6 font-semibold" scope="col">Student Name</th>
+                <th class="py-4 px-6 font-semibold" scope="col">Class</th>
+                <th class="py-4 px-6 font-semibold" scope="col">Phone Number</th>
+                <th class="py-4 px-6 font-semibold" scope="col">Joining Date</th>
+                <th class="py-4 px-6 font-semibold" scope="col">Current Month Status</th>
+                <th class="py-4 px-6 text-center w-36 font-semibold" scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#F4ECE3]" id="student-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-5 text-sm text-[#5C4D42]">
+        <div class="font-normal text-[14px]" id="pagination-info">Showing 1 to 8 of 18 students</div>
+        <nav aria-label="Pagination" class="flex items-center gap-1.5" id="pagination-controls"></nav>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Fee History Modal (3D Dialog Shell) -->
+  <div aria-labelledby="modal-title" aria-modal="true" class="fixed inset-0 z-50 hidden overflow-y-auto" id="fee-history-modal" role="dialog">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" onclick="closeStudentModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-4 text-center">
+      <div class="modal-3d-shell relative transform overflow-hidden rounded-2xl bg-[#FBF9F6] border border-[#E8E0D5] text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl p-6 lg:p-8">
+        <div class="flex items-start justify-between border-b border-[#EFE8DF] pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-[#EFE6DC] flex items-center justify-center text-[#261710] font-bold text-xl font-serif shadow-xs" id="modal-avatar">P</div>
+            <div>
+              <h3 class="text-xl font-bold font-serif text-[#261710]" id="modal-student-name">Student Name</h3>
+              <p class="text-xs text-[#6F5D52]" id="modal-student-sub">Class details & phone</p>
+            </div>
+          </div>
+          <button class="text-[#87786E] hover:text-[#261710] p-1.5 rounded-lg hover:bg-[#EFE8DF] transition cursor-pointer" onclick="closeStudentModal()" type="button">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          </button>
+        </div>
+
+        <!-- Student Basic Details 3D Recessed Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 my-4">
+          <div class="stat-card-3d-recessed p-3 rounded-xl border border-[#EDE4D9]">
+            <span class="block text-[10px] text-[#827267] uppercase font-bold tracking-wider mb-0.5">Class</span>
+            <span class="text-sm font-bold text-[#261710]" id="modal-class-badge">-</span>
+          </div>
+          <div class="stat-card-3d-recessed p-3 rounded-xl border border-[#EDE4D9]">
+            <span class="block text-[10px] text-[#827267] uppercase font-bold tracking-wider mb-0.5">Contact</span>
+            <span class="text-sm font-semibold text-[#261710]" id="modal-phone">-</span>
+          </div>
+          <div class="stat-card-3d-recessed p-3 rounded-xl border border-[#EDE4D9]">
+            <span class="block text-[10px] text-[#827267] uppercase font-bold tracking-wider mb-0.5">Joining Date</span>
+            <span class="text-sm font-semibold text-[#261710]" id="modal-joining-date">-</span>
+          </div>
+          <div class="stat-card-3d-recessed p-3 rounded-xl border border-[#EDE4D9]">
+            <span class="block text-[10px] text-[#827267] uppercase font-bold tracking-wider mb-0.5">Monthly Fee</span>
+            <span class="text-sm font-bold text-[#261710]" id="modal-monthly-fee">-</span>
+          </div>
+          <div class="stat-card-3d-recessed p-3 rounded-xl border border-[#EDE4D9]">
+            <span class="block text-[10px] text-[#827267] uppercase font-bold tracking-wider mb-0.5">Advance Paid</span>
+            <span class="text-sm font-bold text-[#15803D]" id="modal-advance-paid">-</span>
+          </div>
+          <div class="stat-card-3d-recessed p-3 rounded-xl border border-[#EDE4D9]">
+            <span class="block text-[10px] text-[#827267] uppercase font-bold tracking-wider mb-0.5">Advance Date</span>
+            <span class="text-sm font-semibold text-[#261710]" id="modal-advance-date">-</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-2.5">
+          <h4 class="text-xs font-bold tracking-wider uppercase text-[#544439]">Tuition Fee Ledger</h4>
+          <span class="text-[11px] text-stone-500 font-medium">Academic Year 2025-2026</span>
+        </div>
+        <div class="rounded-xl border border-[#EADBCE] overflow-hidden bg-white mb-4 shadow-2xs">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-[#F8F3EC] text-[#544439] border-b border-[#EADBCE]">
+              <tr>
+                <th class="py-2.5 px-3.5">Month</th>
+                <th class="py-2.5 px-3.5">Amount</th>
+                <th class="py-2.5 px-3.5">Payment Date</th>
+                <th class="py-2.5 px-3.5">Mode</th>
+                <th class="py-2.5 px-3.5 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#F1EAE1] text-[#33251E]" id="modal-ledger-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Summary Statistics Footer inside Modal -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-[#EFE8DF]">
+          <div class="flex gap-4">
+            <div class="stat-card-3d-raised px-4 py-2 rounded-xl border border-[#E0D5C7]">
+              <span class="text-[10px] text-[#705E53] block font-bold uppercase tracking-wider">Total Paid</span>
+              <span class="font-extrabold text-[#15803D] text-base" id="modal-total-paid">₹0</span>
+            </div>
+            <div class="stat-card-3d-raised px-4 py-2 rounded-xl border border-[#E0D5C7]">
+              <span class="text-[10px] text-[#705E53] block font-bold uppercase tracking-wider">Due Amount</span>
+              <span class="font-extrabold text-red-600 text-base" id="modal-due-amount">₹0</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="modal-record-payment-btn" onclick="promptRecordPayment()" class="hidden btn-3d px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold">+ Record Payment</button>
+            <button class="btn-3d px-5 py-2.5 rounded-xl bg-[#261710] hover:bg-[#1a0f0a] text-white text-xs font-semibold" onclick="closeStudentModal()" type="button">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-[#231710] text-[#D8C7B5] py-10 border-t border-[#36251A] mt-auto">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6 text-xs">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-10 bg-[#FAF7F2] rounded-xl p-1 flex items-center justify-center shadow-xs">
+          <img alt="SSC" class="max-h-full max-w-full object-contain" src="assets/images/ssc_logo.png">
+        </div>
+        <span class="font-serif font-bold text-white text-sm">SSC Students Study Circle</span>
+      </div>
+      <div class="flex items-center gap-6 text-[#C5B4A3]">
+        <a href="index.html#home" class="hover:text-white">Home</a>
+        <a href="about.html" class="hover:text-white">About</a>
+        <a href="books.html" class="hover:text-white">Books</a>
+        <a href="students.html" class="hover:text-white font-semibold text-white">Students</a>
+        <a href="classes.html" class="hover:text-white">Classes</a>
+        <a href="index.html#admin" class="hover:text-white">Admin</a>
+      </div>
+      <span class="text-[#8A7564]">© 2026 SSC Students Study Circle. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/ssc-store.js"></script>
+  <script src="assets/js/db-service.js"></script>
+  <script src="assets/js/students-data.js"></script>
+  <script src="assets/js/admin-auth.js"></script>
+  <script src="assets/js/admin-modals.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
