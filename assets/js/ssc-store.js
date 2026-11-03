@@ -939,7 +939,7 @@ class CentralSSCStore {
       maxStudents: Number(classData.maxStudents) || 12,
       batchTimings: classData.batchTimings || '5:00 PM – 7:30 PM Regular',
       extendedTimings: 'Until 8:00 PM or 8:30 PM occasionally for communication & activities',
-      monthlyFee: Number(classData.monthlyFee) || 1200,
+      monthlyFee: !isNaN(Number(classData.monthlyFee)) ? Number(classData.monthlyFee) : 1200,
       subjects: (classData.subjects || '').trim(),
       highlights: (classData.highlights || '').trim(),
       isActive: classData.isActive !== false,

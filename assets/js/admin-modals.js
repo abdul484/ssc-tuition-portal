@@ -528,6 +528,12 @@ function handleSaveClassForm(e) {
   const subjects = document.getElementById('acm-subjects').value.trim();
   const isActive = document.getElementById('acm-active').checked;
 
+  if (isNaN(monthlyFee) || monthlyFee < 100) {
+    showGlobalToast('Monthly Tuition Fee must be at least ₹100.', false);
+    document.getElementById('acm-fee').focus();
+    return;
+  }
+
   if (activeEditClassId) {
     window.SSCStore.updateClass(activeEditClassId, {
       name,
