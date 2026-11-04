@@ -26,6 +26,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const VALID_ROUTES = ['home', 'about', 'books', 'students', 'classes', 'enrollment', 'admin'];
 
+// Browser Tab Title Manager: Exact active section naming
+function updateDocumentTitle(route) {
+  const r = (route || window.location.hash.replace('#', '') || 'home').toLowerCase();
+  if (r === 'books') {
+    document.title = 'Books';
+  } else if (r === 'students') {
+    document.title = 'Students';
+  } else if (r === 'classes') {
+    document.title = 'Classes';
+  } else if (r === 'enrollment') {
+    document.title = 'Enrollment';
+  } else if (r === 'admin') {
+    document.title = 'Admin';
+  } else {
+    // Home, About, or fallback default
+    document.title = 'Students Study Circle';
+  }
+}
+window.updateDocumentTitle = updateDocumentTitle;
+
 function initSPARouter() {
   const navLinks = document.querySelectorAll('.main-nav-link');
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -36,6 +56,9 @@ function initSPARouter() {
   function navigateTo(route, pushState = true) {
     route = route.replace('#', '');
     if (!VALID_ROUTES.includes(route)) route = 'home';
+
+    // Update browser tab title immediately
+    updateDocumentTitle(route);
 
     // Hide all page views
     const allViews = document.querySelectorAll('.page-view');
@@ -196,12 +219,17 @@ function initSPARouter() {
   // Initial page load: determine route from URL hash
   const initialRoute = window.location.hash.replace('#', '') || 'home';
   navigateTo(initialRoute, false);
+  updateDocumentTitle(initialRoute);
   updateNavbarEnrollButton(initialRoute);
 
   window.addEventListener('hashchange', () => {
+    const current = window.location.hash.replace('#', '') || 'home';
+    updateDocumentTitle(current);
     updateNavbarEnrollButton();
   });
   window.addEventListener('popstate', () => {
+    const current = window.location.hash.replace('#', '') || 'home';
+    updateDocumentTitle(current);
     updateNavbarEnrollButton();
   });
   window.addEventListener('sscAuthStateChanged', () => {

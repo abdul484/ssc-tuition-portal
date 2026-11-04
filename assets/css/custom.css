@@ -1050,3 +1050,25 @@ body.view-admin #mobileMenu .btn-3d-hero {
   border-bottom-width: 1px !important;
   box-shadow: 0 1px 3px rgba(245, 158, 11, 0.2) !important;
 }
+
+/* ==========================================================================
+   Header Navbar Brand Logo Sizing Enhancement
+   ========================================================================== */
+header a.group > div:first-child,
+header a[href*="home"] > div:first-child {
+  width: 3.75rem !important;  /* 60px */
+  height: 3.5rem !important;  /* 56px */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: transform 0.2s ease-in-out;
+}
+
+header a.group > div:first-child img,
+header a[href*="home"] > div:first-child img {
+  width: auto !important;
+  height: 100% !important;
+  max-height: 56px !important;
+  max-width: 60px !important;
+  object-fit: contain !important;
+}

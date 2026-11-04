@@ -1,13 +1,19 @@
 # SSC (Students Study Circle) Tuition Management Portal
 
-A full-featured, responsive web application and administration portal for **SSC Students Study Circle** — an academic coaching institute serving students from LKG through Class 10. Built with high-performance Vanilla JavaScript, modern tactile 3D physical styling, a reactive single-source-of-truth state architecture, and bidirectional Supabase PostgreSQL cloud synchronization.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-students--study--circle.vercel.app-261710?style=for-the-badge&logo=vercel&logoColor=white)](https://students-study-circle.vercel.app)
+&nbsp;
+[![Deployment Status](https://img.shields.io/badge/Status-Active%20%26%20Online-059669?style=for-the-badge)](https://students-study-circle.vercel.app)
+
+> **Live Deployment:** [https://students-study-circle.vercel.app](https://students-study-circle.vercel.app)
+
+A full-featured, responsive web application and administration portal for **SSC Students Study Circle** — an academic coaching institute serving students from LKG through Class 10. Built with Vanilla JavaScript, Obsidian Scholastic 3D physical styling, a reactive single-source-of-truth state architecture, and bidirectional Supabase PostgreSQL cloud synchronization.
 
 ---
 
 ## 🛠️ Technology Stack
 
 * **Frontend Architecture:** Semantic HTML5, Vanilla JavaScript (ES6+ modules and controllers), Single Page Application (SPA) hash router with browser history integration (`popstate` / `hashchange`).
-* **Styling & UI System:** Tailwind CSS utility framework supplemented with a bespoke **Obsidian Scholastic** 3D physical design system (`custom.css`). Features physical keycap depth, layered elevation shadows, responsive KPI grids, and smooth active press micro-interactions.
+* **Styling & UI System:** Tailwind CSS utility framework supplemented with a bespoke **Obsidian Scholastic** 3D physical design system (`custom.css`). Features physical keycap depth, layered elevation shadows, responsive KPI grids, and active press micro-interactions.
 * **State Management:** Custom reactive Central Store (`SSCStore`) implementing an event-driven pub/sub architecture with instant local caching and cloud sync hooks.
 * **Backend & Cloud Database:** **Supabase PostgreSQL** with 8 structured tables, custom constraints, and Row Level Security (RLS) policies.
 * **Communication & Dispatches:** Direct WhatsApp Business Integration (`wa.me` deep linking) for automated tuition fee receipts, parent notifications, and physical textbook reservation inquiries.
@@ -17,14 +23,17 @@ A full-featured, responsive web application and administration portal for **SSC 
 ## 🌟 Core Modules & Capabilities
 
 ### 1. Public Visitor Portal & SPA Router
+* **Dynamic Browser Tab Titles:** Context-aware browser tab titles that display `Students Study Circle` on Home and About pages, and dynamically update to exact active section names (`Books`, `Students`, `Classes`, `Enrollment`, `Admin`).
+* **Edge-to-Edge Custom Branding:** High-resolution cropped square favicon suite (`assets/favicon.png`, root `favicon.ico`) with cache-busting integration (`?v=4`) for crisp tab icon rendering across browsers.
 * **Instant Page Navigation:** Unified single-page experience supporting `Home`, `About`, `Books`, `Students`, `Classes`, and `Admin` views with seamless tab transitions and accessible mobile drawer navigation.
 * **Academic Highlights:** Hero metrics, institutional methodology, 3-hour daily tuition structure (Instruction $\rightarrow$ Guided Practice $\rightarrow$ Homework Clearing), and parent testimonials.
 
 ### 2. Classes & Academic Curriculum (LKG to Class 10)
-* **Tiered Class Catalog:** Comprehensive grade cards covering foundational learning (LKG/UKG) through secondary board preparation (Classes 1–10).
+* **Clean Public Class Cards:** Focused curriculum presentations highlighting grade levels, batch timings, key subject tracks, and foundational goals with zero exposed public pricing to maintain an academic-first presentation.
 * **Direct Class Enrollment:** One-click integration linking specific class cards directly to the enrollment application with pre-selected grade parameters.
 
 ### 3. Student Management Workspace
+* **Flexible Fee Structure:** Full support for custom monthly tuition rates starting from ₹100 up through secondary school tiers, configurable directly in student profiles.
 * **Real-Time Grade Counters:** Dynamic top badge pills computing student distribution across grades (LKG, UKG, 1st through 10th Class).
 * **Live Search & Multi-Criteria Filtering:** Sub-millisecond filtering by student name, contact number, school, grade, and fee payment status (`Paid`, `Half Paid`, `Pending`).
 * **Student Record Modal:** Form dialog for adding and modifying student details with strict 10-digit mobile verification, joining dates, and school affiliations.
@@ -47,6 +56,7 @@ A full-featured, responsive web application and administration portal for **SSC 
 ### 7. Secure Admin Control Center
 * **Role-Based Access Control:** Dedicated Director and Staff authentication with persistent session validation and protected administration views.
 * **Real-Time KPI Dashboards:** 3D tactile stat cards tracking Active Students, Pending Enrollments, Monthly Fee Collections, and Books Catalog metrics.
+* **Comprehensive Fee Administration:** Granular record keeping supporting partial payments, fee adjustments starting from ₹100, and month-by-month payment reconciliation.
 * **Recycle Bin & Safe Recovery:** Soft-deletion safeguard for student profiles, classes, and books with full restore capability.
 
 ---
@@ -61,14 +71,18 @@ SSC WEBSITE/
 ├── classes.html                  # Standalone Classes & Curriculum view
 ├── students.html                 # Standalone Student Directory view
 ├── enrollment.html               # Standalone Enrollment Application view
-├── admin.html                    # Standalone Admin Portal view
+├── admin.html                    # Standalone Admin Portal redirect
+├── favicon.ico                   # Root multi-resolution browser favicon
+├── favicon.png                   # Root fallback browser favicon
 ├── supabase_schema.sql           # Complete PostgreSQL schema (8 tables, RLS policies, seeds)
 ├── README.md                     # Technical documentation & project setup guide
 ├── assets/
+│   ├── favicon.png               # High-resolution edge-to-edge browser favicon (?v=4)
+│   ├── favicon.ico               # Multi-resolution ICO asset (16/32/48/64px)
 │   ├── css/
 │   │   └── custom.css            # 3D physical styling, KPI cards, animations, print rules
 │   ├── js/
-│   │   ├── app.js                # Core frontend router and public view controller
+│   │   ├── app.js                # Core frontend router, dynamic title manager, public view controller
 │   │   ├── ssc-store.js          # Centralized reactive data store & business logic
 │   │   ├── admin-dashboard.js    # Administrative dashboard, KPI cards, ledger tabs
 │   │   ├── admin-modals.js       # Modals for student management, fee payments & receipts
@@ -79,6 +93,7 @@ SSC WEBSITE/
 │   │   └── books-data.js         # Books catalog definitions & downloadable assets
 │   ├── images/
 │   │   ├── ssc_logo.png          # Primary institute logo
+│   │   ├── ssc-favicon.png       # Square brand icon
 │   │   ├── hero_student_desk.png # Hero section educational visual
 │   │   └── ...                   # Brand assets and illustrations
 │   └── downloads/
@@ -156,7 +171,7 @@ The application includes an offline-first architecture with automatic failover t
 ## 🔐 Administrator Access
 
 * Default administrative access can be initialized or managed from the Admin tab.
-* Form validation enforces authenticated sessions before modifying student records, recording fee collections, or altering curriculum pricing.
+* Form validation enforces authenticated sessions before modifying student records, recording fee collections, or altering curriculum records.
 * The header "Enroll Now" call-to-action automatically suppresses on administrative tabs to maximize workspace visibility.
 
 ---

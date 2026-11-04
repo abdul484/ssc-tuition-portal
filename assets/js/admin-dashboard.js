@@ -82,6 +82,7 @@ function checkAdminAuthView(isLoggedIn) {
 // ==========================================================================
 function switchAdminTab(tabName) {
   currentAdminTab = tabName;
+  document.title = 'Admin';
 
   const isSettingsSubtab = ['staff', 'notifications', 'settings', 'recyclebin'].includes(tabName);
 
