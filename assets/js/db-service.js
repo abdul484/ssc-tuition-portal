@@ -609,6 +609,186 @@ class DatabaseService {
   }
 
   // ==========================================================================
+  // CROSS-DEVICE ENROLLMENT SYNCHRONIZATION (Direct Supabase Integration)
+  // ==========================================================================
+  getSupabaseClient() {
+    if (this.supabaseClient) return this.supabaseClient;
+    if (typeof window.supabase !== 'undefined') {
+      let saved = null;
+      try {
+        const stored = localStorage.getItem(KEY_CONFIG);
+        if (stored) saved = JSON.parse(stored);
+      } catch (e) {}
+
+      const supabaseUrl = (saved?.url || window.SSC_CONFIG?.SUPABASE_URL || 'https://gznjhflxskxggaufsbct.supabase.co').trim();
+      const supabaseKey = (saved?.key || window.SSC_CONFIG?.SUPABASE_ANON_KEY || '').trim();
+
+      if (supabaseUrl && supabaseKey && !supabaseKey.includes('[PASTE_')) {
+        try {
+          this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+          this.isCloudActive = true;
+          return this.supabaseClient;
+        } catch (e) {
+          console.warn('Error creating Supabase client:', e);
+        }
+      }
+    }
+    return null;
+  }
+
+  async insertEnrollmentRecord(payload) {
+    const client = this.getSupabaseClient();
+    if (!client) {
+      console.info('Supabase client not active; enrollment saved to local reactive store.');
+      return { localOnly: true };
+    }
+
+    const tableCandidates = ['enrollments', 'enrollment_requests'];
+    let lastError = null;
+
+    for (const tbl of tableCandidates) {
+      try {
+        const { data, error } = await client.from(tbl).insert([payload]).select();
+        if (!error) {
+          console.log(`⚡ Supabase: Successfully inserted enrollment into table "${tbl}":`, payload.request_id);
+          this.activeEnrollmentTable = tbl;
+          return { success: true, table: tbl, data };
+        }
+
+        if (error.code === '42P01' || (error.message && error.message.includes('relation') && error.message.includes('does not exist'))) {
+          lastError = error;
+          continue;
+        }
+
+        // Handle possible unknown column error by falling back to core columns
+        if (error.message && error.message.includes('column') && error.message.includes('does not exist')) {
+          console.warn(`Supabase: Column mismatch in table "${tbl}", retrying with essential columns...`);
+          const minimalPayload = {
+            request_id: payload.request_id,
+            student_name: payload.student_name,
+            requested_class: payload.requested_class,
+            parent_name: payload.parent_name,
+            phone: payload.phone,
+            status: payload.status || 'pending',
+            is_read: Boolean(payload.is_read)
+          };
+          const retryRes = await client.from(tbl).insert([minimalPayload]).select();
+          if (!retryRes.error) {
+            console.log(`⚡ Supabase: Inserted into "${tbl}" with core columns:`, payload.request_id);
+            this.activeEnrollmentTable = tbl;
+            return { success: true, table: tbl, data: retryRes.data };
+          }
+        }
+
+        lastError = error;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (lastError) {
+      console.warn('Supabase: Remote enrollment insert error:', lastError);
+    }
+    return { success: false, error: lastError };
+  }
+
+  async fetchLatestEnrollments() {
+    const client = this.getSupabaseClient();
+    if (!client) return (window.SSCStore ? window.SSCStore.getEnrollments() : []);
+
+    const tableCandidates = this.activeEnrollmentTable
+      ? [this.activeEnrollmentTable, 'enrollments', 'enrollment_requests']
+      : ['enrollments', 'enrollment_requests'];
+
+    let rows = null;
+    let usedTable = null;
+
+    for (const tbl of tableCandidates) {
+      try {
+        const { data, error } = await client
+          .from(tbl)
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && Array.isArray(data)) {
+          rows = data;
+          usedTable = tbl;
+          this.activeEnrollmentTable = tbl;
+          break;
+        }
+
+        if (error && (error.code === '42P01' || (error.message && error.message.includes('relation') && error.message.includes('does not exist')))) {
+          continue;
+        }
+      } catch (e) {
+        // Continue
+      }
+    }
+
+    if (!rows) return (window.SSCStore ? window.SSCStore.getEnrollments() : []);
+
+    // Filter out dummy/seed entries
+    const dummyEnrIds = ['SSC-ENR-2026-1001', 'SSC-ENR-2026-1002', 'SSC-ENR-2026-1003'];
+    const dummyStudentNames = ['Abhinav Reddy', 'Samyuktha Rao', 'Charan Teja'];
+    const realRows = rows.filter(r => 
+      !dummyEnrIds.includes(r.request_id || r.requestId) && 
+      !dummyStudentNames.includes(r.student_name || r.studentName)
+    );
+
+    // Map rows to central store format
+    const mapped = realRows.map(r => ({
+      id: r.id ? Number(r.id) : Date.now(),
+      requestId: r.request_id || r.requestId || `SSC-ENR-${Date.now()}`,
+      studentName: r.student_name || r.studentName || r.name || '',
+      requestedClass: r.requested_class || r.class || r.studentClass || '1st Class',
+      parentName: r.parent_name || r.parentName || r.father_name || r.fatherName || 'Parent',
+      fatherName: r.father_name || r.fatherName || '',
+      motherName: r.mother_name || r.motherName || '',
+      phone: r.phone || r.parent_phone || '',
+      email: r.email || r.parent_email || '',
+      schoolName: r.school_name || r.schoolName || '',
+      board: r.board || 'State Board',
+      streamSubject: r.stream_subject || r.streamSubject || '',
+      additionalNotes: r.additional_notes || r.additionalNotes || '',
+      coordinatorNotes: r.coordinator_notes || r.coordinatorNotes || '',
+      status: r.status || 'pending',
+      isRead: Boolean(r.is_read || r.isRead),
+      createdAt: r.created_at || r.createdAt || new Date().toISOString()
+    }));
+
+    if (window.SSCStore) {
+      // Overwrite local enrollments array with fresh rows from Supabase
+      window.SSCStore.state.enrollments = mapped;
+
+      // Sync unread notifications for pending applications
+      const pendingUnread = mapped.filter(e => e.status === 'pending' && !e.isRead);
+      if (!Array.isArray(window.SSCStore.state.notifications)) {
+        window.SSCStore.state.notifications = [];
+      }
+      pendingUnread.forEach(enr => {
+        const notifExists = window.SSCStore.state.notifications.some(n => 
+          n.referenceId === enr.requestId || (n.type === 'enrollment' && n.title && n.title.includes(enr.studentName))
+        );
+        if (!notifExists) {
+          window.SSCStore.state.notifications.unshift({
+            id: `notif-enr-${enr.requestId}`,
+            title: 'New Enrollment Application',
+            message: `Parent ${enr.parentName} submitted an application for ${enr.studentName} (${enr.requestedClass}). Phone: ${enr.phone}.`,
+            type: 'enrollment',
+            referenceId: enr.requestId,
+            isRead: false,
+            createdAt: enr.createdAt
+          });
+        }
+      });
+
+      window.SSCStore.saveToStorage();
+    }
+
+    return mapped;
+  }
+
+  // ==========================================================================
   // 7. TABLE 5: ENROLLMENT REQUESTS
   // ==========================================================================
   async syncEnrollmentInsert(enr) {
@@ -861,7 +1041,15 @@ class DatabaseService {
   deleteClass(id) { return window.SSCStore ? window.SSCStore.deleteClass(id) : false; }
 
   getEnrollments() { return window.SSCStore ? window.SSCStore.getEnrollments() : []; }
-  submitEnrollment(data) { return window.SSCStore ? window.SSCStore.submitEnrollment(data) : null; }
+  async submitEnrollment(data) {
+    if (window.SSCStore && typeof window.SSCStore.submitEnrollment === 'function') {
+      return await window.SSCStore.submitEnrollment(data);
+    }
+    return null;
+  }
+  async addEnrollment(data) {
+    return await this.submitEnrollment(data);
+  }
   approveEnrollment(requestId) { return window.SSCStore ? window.SSCStore.approveEnrollment(requestId) : null; }
   updateEnrollmentStatus(id, newStatus, notes) { return window.SSCStore ? window.SSCStore.updateEnrollmentStatus(id, newStatus, notes) : null; }
   deleteEnrollment(requestId) { return window.SSCStore ? window.SSCStore.deleteEnrollment(requestId) : false; }
@@ -879,16 +1067,6 @@ class DatabaseService {
   deleteNotification(id) { return window.SSCStore ? window.SSCStore.deleteNotification(id) : false; }
   clearAllNotifications() { return window.SSCStore ? window.SSCStore.clearAllNotifications() : false; }
   clearReadNotifications() { return window.SSCStore ? window.SSCStore.clearReadNotifications() : false; }
-
-  getVisitorStats() {
-    return window.SSCStore ? window.SSCStore.getVisitorStats() : { totalVisits: 0, recentSessions: [] };
-  }
-  recordVisitorSession(session) {
-    return window.SSCStore ? window.SSCStore.recordVisitorSession(session) : null;
-  }
-  updateVisitorTotal(count) {
-    return window.SSCStore ? window.SSCStore.updateVisitorTotal(count) : null;
-  }
 
   getStaff() { return window.SSCStore ? window.SSCStore.getStaff() : []; }
   registerStaff(name, email, phone, role = 'staff') { return window.SSCStore ? window.SSCStore.registerStaff(name, email, phone, role) : null; }

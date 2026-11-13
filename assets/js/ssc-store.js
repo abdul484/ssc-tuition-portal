@@ -1382,12 +1382,7 @@ class CentralSSCStore {
           if (!Array.isArray(parsed.recycleBin)) parsed.recycleBin = [];
           if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
           if (!Array.isArray(parsed.enrollments)) parsed.enrollments = [];
-          if (!parsed.visitorStats || typeof parsed.visitorStats !== 'object') {
-            parsed.visitorStats = { totalVisits: 0, recentSessions: [] };
-          }
-          if (!Array.isArray(parsed.visitorStats.recentSessions)) {
-            parsed.visitorStats.recentSessions = [];
-          }
+
 
           // Purge any legacy dummy/seed enrollment requests and notifications from localStorage
           const dummyEnrIds = ['SSC-ENR-2026-1001', 'SSC-ENR-2026-1002', 'SSC-ENR-2026-1003'];
@@ -1431,10 +1426,7 @@ class CentralSSCStore {
       staff: JSON.parse(JSON.stringify(INITIAL_STAFF)),
       notifications: JSON.parse(JSON.stringify(INITIAL_NOTIFICATIONS)),
       recycleBin: [],
-      visitorStats: {
-        totalVisits: 0,
-        recentSessions: []
-      },
+
       lastUpdated: new Date().toISOString()
     };
     this.saveToStorage(defaultState);
@@ -2185,8 +2177,7 @@ class CentralSSCStore {
     return this.state.enrollments || [];
   }
 
-  submitEnrollment(data) {
-    const enrollments = this.getEnrollments();
+  async submitEnrollment(data) {
     const cleanPhone = (data.parentPhone || data.phone || '').replace(/\D/g, '');
     const requestId = `SSC-ENR-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
 
@@ -2194,27 +2185,48 @@ class CentralSSCStore {
       id: Date.now(),
       requestId,
       studentName: (data.studentName || '').trim(),
-      requestedClass: data.studentClass || '1st Class',
-      parentName: (data.fatherName || data.motherName || 'Parent').trim(),
+      requestedClass: data.studentClass || data.requestedClass || '1st Class',
+      parentName: (data.fatherName || data.motherName || data.parentName || 'Parent').trim(),
       fatherName: (data.fatherName || '').trim(),
       motherName: (data.motherName || '').trim(),
       phone: cleanPhone,
-      email: (data.parentEmail || '').trim(),
+      email: (data.parentEmail || data.email || '').trim(),
       schoolName: (data.schoolName || '').trim(),
       board: data.board || 'State Board',
-      streamSubject: data.selectedStream || 'All Core Subjects',
-      additionalNotes: (data.notes || '').trim(),
+      streamSubject: data.selectedStream || data.streamSubject || 'All Core Subjects',
+      additionalNotes: (data.notes || data.additionalNotes || '').trim(),
       status: 'pending',
       isRead: false,
       createdAt: new Date().toISOString()
     };
 
-    this.state.enrollments.unshift(newEnr);
+    // Direct async insertion into Supabase enrollments table (matching exact schema column names)
+    const dbPayload = {
+      request_id: requestId,
+      student_name: newEnr.studentName,
+      requested_class: newEnr.requestedClass,
+      parent_name: newEnr.parentName,
+      father_name: newEnr.fatherName,
+      mother_name: newEnr.motherName,
+      phone: newEnr.phone,
+      email: newEnr.email,
+      school_name: newEnr.schoolName,
+      board: newEnr.board,
+      stream_subject: newEnr.streamSubject,
+      additional_notes: newEnr.additionalNotes,
+      status: 'pending',
+      is_read: false
+    };
 
-    // Real-Time Cloud Sync: Supabase PostgreSQL (enrollment_requests)
-    if (window.DatabaseService) {
-      window.DatabaseService.syncEnrollmentInsert(newEnr);
+    if (window.DatabaseService && typeof window.DatabaseService.insertEnrollmentRecord === 'function') {
+      try {
+        await window.DatabaseService.insertEnrollmentRecord(dbPayload);
+      } catch (err) {
+        console.warn('Supabase direct enrollment insert error:', err);
+      }
     }
+
+    this.state.enrollments.unshift(newEnr);
 
     this.addNotification(
       'New Enrollment Application',
@@ -2223,8 +2235,14 @@ class CentralSSCStore {
       requestId
     );
 
+    this.saveToStorage();
     this.emit('ENROLLMENT_SUBMITTED', { enrollment: newEnr });
     return { success: true, requestId, enrollment: newEnr };
+  }
+
+  // Alias addEnrollment for compatibility
+  async addEnrollment(data) {
+    return await this.submitEnrollment(data);
   }
 
   approveEnrollment(requestId) {
@@ -2731,62 +2749,7 @@ class CentralSSCStore {
     return this.getWhatsAppReceiptUrl(receiptNo, studentName, studentClass, monthName, amount, date, mode, parentPhone);
   }
 
-  // ========================================================================
-  // REAL WEBSITE VISITOR STATS (Zero-SQL, Public Browser Sessions)
-  // ========================================================================
-  getVisitorStats() {
-    if (!this.state.visitorStats || typeof this.state.visitorStats !== 'object') {
-      this.state.visitorStats = { totalVisits: 0, recentSessions: [] };
-    }
-    if (!Array.isArray(this.state.visitorStats.recentSessions)) {
-      this.state.visitorStats.recentSessions = [];
-    }
-    return this.state.visitorStats;
-  }
 
-  recordVisitorSession(session) {
-    if (!this.state.visitorStats || typeof this.state.visitorStats !== 'object') {
-      this.state.visitorStats = { totalVisits: 0, recentSessions: [] };
-    }
-    if (!Array.isArray(this.state.visitorStats.recentSessions)) {
-      this.state.visitorStats.recentSessions = [];
-    }
-
-    const sessionEntry = {
-      id: 'sess-' + Date.now() + '-' + Math.floor(100 + Math.random() * 900),
-      timestamp: session.timestamp || new Date().toISOString(),
-      page: session.page || 'Home Page',
-      device: session.device || 'Desktop',
-      browser: session.browser || 'Browser',
-      referrer: session.referrer || 'Direct / Search'
-    };
-
-    this.state.visitorStats.recentSessions.unshift(sessionEntry);
-    if (this.state.visitorStats.recentSessions.length > 30) {
-      this.state.visitorStats.recentSessions = this.state.visitorStats.recentSessions.slice(0, 30);
-    }
-
-    if (typeof session.totalVisits === 'number' && session.totalVisits >= 0) {
-      this.state.visitorStats.totalVisits = session.totalVisits;
-    } else {
-      this.state.visitorStats.totalVisits = (this.state.visitorStats.totalVisits || 0) + 1;
-    }
-
-    this.saveToStorage();
-    this.emit('VISITOR_SESSION_RECORDED', { session: sessionEntry, totalVisits: this.state.visitorStats.totalVisits });
-    return sessionEntry;
-  }
-
-  updateVisitorTotal(count) {
-    if (!this.state.visitorStats || typeof this.state.visitorStats !== 'object') {
-      this.state.visitorStats = { totalVisits: 0, recentSessions: [] };
-    }
-    if (typeof count === 'number' && !isNaN(count)) {
-      this.state.visitorStats.totalVisits = count;
-      this.saveToStorage();
-      this.emit('VISITOR_TOTAL_UPDATED', { totalVisits: count });
-    }
-  }
 
   // Reset to initial clean state
   resetStore() {
