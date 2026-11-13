@@ -119,9 +119,7 @@ CREATE TABLE IF NOT EXISTS public.enrollment_requests (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
--- Convenience Alias View: public.enrollments -> public.enrollment_requests
-CREATE OR REPLACE VIEW public.enrollments AS 
-SELECT * FROM public.enrollment_requests;
+
 
 -- ============================================================================
 -- 6. STAFF & FACULTY DIRECTORY TABLE

@@ -1,3 +1,8 @@
+var DEFAULT_SUPABASE_URL = window.DEFAULT_SUPABASE_URL || "https://gznjhflxskxggaufsbct.supabase.co";
+var DEFAULT_SUPABASE_KEY = window.DEFAULT_SUPABASE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6bmpoZmx4c2t4Z2dhdWZzYmN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MzQwMzgsImV4cCI6MjEwODUxMDAzOH0.KzHXvwOxU4nGW6928M6oN97ielkOoDCyOKB04MREOmA";
+window.DEFAULT_SUPABASE_URL = DEFAULT_SUPABASE_URL;
+window.DEFAULT_SUPABASE_KEY = DEFAULT_SUPABASE_KEY;
+
 /**
  * SSC Students Study Circle - Centralized Reactive Store (Single Source of Truth)
  * Provides 100% Real-Time Global Interlinking across:
@@ -2200,7 +2205,7 @@ class CentralSSCStore {
       createdAt: new Date().toISOString()
     };
 
-    // Direct async insertion into Supabase enrollments table (matching exact schema column names)
+    // Direct async insertion into Supabase public.enrollment_requests table
     const dbPayload = {
       request_id: requestId,
       student_name: newEnr.studentName,
@@ -2223,6 +2228,13 @@ class CentralSSCStore {
         await window.DatabaseService.insertEnrollmentRecord(dbPayload);
       } catch (err) {
         console.warn('Supabase direct enrollment insert error:', err);
+      }
+    } else if (typeof window.supabase !== 'undefined') {
+      try {
+        const client = window.supabase.createClient(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_KEY);
+        await client.from('enrollment_requests').insert([dbPayload]);
+      } catch (err) {
+        console.warn('Direct fallback Supabase insert error:', err);
       }
     }
 

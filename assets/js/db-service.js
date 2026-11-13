@@ -1,3 +1,8 @@
+var DEFAULT_SUPABASE_URL = window.DEFAULT_SUPABASE_URL || "https://gznjhflxskxggaufsbct.supabase.co";
+var DEFAULT_SUPABASE_KEY = window.DEFAULT_SUPABASE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6bmpoZmx4c2t4Z2dhdWZzYmN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MzQwMzgsImV4cCI6MjEwODUxMDAzOH0.KzHXvwOxU4nGW6928M6oN97ielkOoDCyOKB04MREOmA";
+window.DEFAULT_SUPABASE_URL = DEFAULT_SUPABASE_URL;
+window.DEFAULT_SUPABASE_KEY = DEFAULT_SUPABASE_KEY;
+
 /**
  * SSC Students Study Circle - Database & Cloud Bridge Service (v5.0)
  * 
@@ -39,8 +44,12 @@ class DatabaseService {
     }
 
     // Default to pre-configured hardcoded credentials or saved override
-    const supabaseUrl = (saved?.url || window.SSC_CONFIG?.SUPABASE_URL || 'https://gznjhflxskxggaufsbct.supabase.co').trim();
-    const supabaseKey = (saved?.key || window.SSC_CONFIG?.SUPABASE_ANON_KEY || '[PASTE_YOUR_ANON_KEY_HERE]').trim();
+    const supabaseUrl = (saved?.url || window.SSC_CONFIG?.SUPABASE_URL || window.DEFAULT_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
+    const supabaseKey = ((saved?.key && !saved.key.includes('[PASTE_'))
+      ? saved.key
+      : (window.SSC_CONFIG?.SUPABASE_ANON_KEY && !window.SSC_CONFIG.SUPABASE_ANON_KEY.includes('[PASTE_'))
+        ? window.SSC_CONFIG.SUPABASE_ANON_KEY
+        : (window.DEFAULT_SUPABASE_KEY || DEFAULT_SUPABASE_KEY)).trim();
 
     if (supabaseUrl && supabaseKey && typeof window.supabase !== 'undefined') {
       try {
@@ -620,10 +629,14 @@ class DatabaseService {
         if (stored) saved = JSON.parse(stored);
       } catch (e) {}
 
-      const supabaseUrl = (saved?.url || window.SSC_CONFIG?.SUPABASE_URL || 'https://gznjhflxskxggaufsbct.supabase.co').trim();
-      const supabaseKey = (saved?.key || window.SSC_CONFIG?.SUPABASE_ANON_KEY || '').trim();
+      const supabaseUrl = (saved?.url || window.SSC_CONFIG?.SUPABASE_URL || window.DEFAULT_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
+      const supabaseKey = ((saved?.key && !saved.key.includes('[PASTE_'))
+        ? saved.key
+        : (window.SSC_CONFIG?.SUPABASE_ANON_KEY && !window.SSC_CONFIG.SUPABASE_ANON_KEY.includes('[PASTE_'))
+          ? window.SSC_CONFIG.SUPABASE_ANON_KEY
+          : (window.DEFAULT_SUPABASE_KEY || DEFAULT_SUPABASE_KEY)).trim();
 
-      if (supabaseUrl && supabaseKey && !supabaseKey.includes('[PASTE_')) {
+      if (supabaseUrl && supabaseKey) {
         try {
           this.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
           this.isCloudActive = true;
@@ -639,90 +652,64 @@ class DatabaseService {
   async insertEnrollmentRecord(payload) {
     const client = this.getSupabaseClient();
     if (!client) {
-      console.info('Supabase client not active; enrollment saved to local reactive store.');
+      console.warn('Supabase client not active; enrollment saved to local reactive store.');
       return { localOnly: true };
     }
 
-    const tableCandidates = ['enrollments', 'enrollment_requests'];
-    let lastError = null;
+    try {
+      // Direct insertion into public.enrollment_requests
+      const { data, error } = await client
+        .from('enrollment_requests')
+        .insert([payload])
+        .select();
 
-    for (const tbl of tableCandidates) {
-      try {
-        const { data, error } = await client.from(tbl).insert([payload]).select();
-        if (!error) {
-          console.log(`⚡ Supabase: Successfully inserted enrollment into table "${tbl}":`, payload.request_id);
-          this.activeEnrollmentTable = tbl;
-          return { success: true, table: tbl, data };
-        }
+      if (!error) {
+        console.log('⚡ Supabase: Successfully inserted enrollment into "enrollment_requests":', payload.request_id);
 
-        if (error.code === '42P01' || (error.message && error.message.includes('relation') && error.message.includes('does not exist'))) {
-          lastError = error;
-          continue;
-        }
-
-        // Handle possible unknown column error by falling back to core columns
-        if (error.message && error.message.includes('column') && error.message.includes('does not exist')) {
-          console.warn(`Supabase: Column mismatch in table "${tbl}", retrying with essential columns...`);
-          const minimalPayload = {
-            request_id: payload.request_id,
-            student_name: payload.student_name,
-            requested_class: payload.requested_class,
-            parent_name: payload.parent_name,
-            phone: payload.phone,
-            status: payload.status || 'pending',
-            is_read: Boolean(payload.is_read)
+        // Also insert real notification into public.admin_notifications
+        try {
+          const notifPayload = {
+            id: `notif-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+            title: 'New Enrollment Application',
+            message: `Parent ${payload.parent_name} submitted an application for ${payload.student_name} (${payload.requested_class}). Phone: ${payload.phone}.`,
+            type: 'enrollment',
+            reference_id: payload.request_id,
+            is_read: false
           };
-          const retryRes = await client.from(tbl).insert([minimalPayload]).select();
-          if (!retryRes.error) {
-            console.log(`⚡ Supabase: Inserted into "${tbl}" with core columns:`, payload.request_id);
-            this.activeEnrollmentTable = tbl;
-            return { success: true, table: tbl, data: retryRes.data };
-          }
+          await client.from('admin_notifications').insert([notifPayload]);
+        } catch (ne) {
+          console.warn('Supabase admin_notifications insert notice:', ne);
         }
 
-        lastError = error;
-      } catch (err) {
-        lastError = err;
+        return { success: true, table: 'enrollment_requests', data };
       }
-    }
 
-    if (lastError) {
-      console.warn('Supabase: Remote enrollment insert error:', lastError);
+      console.warn('Supabase insert enrollment_requests error:', error);
+      return { success: false, error };
+    } catch (err) {
+      console.warn('Supabase remote enrollment insert exception:', err);
+      return { success: false, error: err };
     }
-    return { success: false, error: lastError };
   }
 
   async fetchLatestEnrollments() {
     const client = this.getSupabaseClient();
     if (!client) return (window.SSCStore ? window.SSCStore.getEnrollments() : []);
 
-    const tableCandidates = this.activeEnrollmentTable
-      ? [this.activeEnrollmentTable, 'enrollments', 'enrollment_requests']
-      : ['enrollments', 'enrollment_requests'];
-
     let rows = null;
-    let usedTable = null;
+    try {
+      const { data, error } = await client
+        .from('enrollment_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    for (const tbl of tableCandidates) {
-      try {
-        const { data, error } = await client
-          .from(tbl)
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (!error && Array.isArray(data)) {
-          rows = data;
-          usedTable = tbl;
-          this.activeEnrollmentTable = tbl;
-          break;
-        }
-
-        if (error && (error.code === '42P01' || (error.message && error.message.includes('relation') && error.message.includes('does not exist')))) {
-          continue;
-        }
-      } catch (e) {
-        // Continue
+      if (!error && Array.isArray(data)) {
+        rows = data;
+      } else if (error) {
+        console.warn('Supabase fetch enrollment_requests error:', error);
       }
+    } catch (e) {
+      console.warn('Supabase fetch enrollment_requests exception:', e);
     }
 
     if (!rows) return (window.SSCStore ? window.SSCStore.getEnrollments() : []);
