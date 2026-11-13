@@ -1012,6 +1012,16 @@ function initStudentsSection() {
     renderStudentsTable();
   });
 
+  window.addEventListener('CLOUD_SYNC_COMPLETE', () => {
+    updateMetricsDisplay();
+    renderStudentsTable();
+  });
+
+  window.addEventListener('STUDENTS_SYNCED_FROM_CLOUD', () => {
+    updateMetricsDisplay();
+    renderStudentsTable();
+  });
+
   updateAdminControlsInStudents(window.AdminAuth && window.AdminAuth.isLoggedIn());
 }
 
@@ -1043,6 +1053,7 @@ function updateMetricsDisplay() {
     if (el) el.textContent = classCounts[className] || 0;
   });
 }
+window.updateMetricsDisplay = updateMetricsDisplay;
 
 
 window.togglePublicClassSort = function() {
@@ -1283,6 +1294,7 @@ function renderStudentsTable() {
     paginationControls.innerHTML = pagesHtml;
   }
 }
+window.renderStudentsTable = renderStudentsTable;
 
 window.changeStudentPage = function(page) {
   studentCurrentPage = page;

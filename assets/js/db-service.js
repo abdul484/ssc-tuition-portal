@@ -168,7 +168,7 @@ class DatabaseService {
         binRes
       ] = await Promise.allSettled([
         this.supabaseClient.from('students').select('*').order('id', { ascending: true }),
-        this.supabaseClient.from('fee_records').select('*').order('created_at', { ascending: true }),
+        this.supabaseClient.from('fee_records').select('*').order('id', { ascending: true }),
         this.supabaseClient.from('books').select('*').order('display_order', { ascending: true }),
         this.supabaseClient.from('classes').select('*').order('display_order', { ascending: true }),
         this.supabaseClient.from('enrollment_requests').select('*').order('created_at', { ascending: false }),
@@ -206,9 +206,13 @@ class DatabaseService {
           const studentFees = rawFees
             .filter(f => Number(f.student_id) === Number(s.id))
             .map(f => {
-              const monthParts = (f.month || '').split('-');
-              const year = parseInt(monthParts[0]) || new Date().getFullYear();
-              const month = parseInt(monthParts[1]) || 1;
+              let year = 2026;
+              let month = 6;
+              if (f.month && f.month.includes('-')) {
+                const parts = f.month.split('-');
+                year = parseInt(parts[0], 10) || year;
+                month = parseInt(parts[1], 10) || month;
+              }
               return {
                 id: f.id ? `PAY-${f.id}` : `PAY-${Date.now()}`,
                 dbId: f.id,
@@ -217,7 +221,7 @@ class DatabaseService {
                 month,
                 amount: Number(f.amount) || 0,
                 date: f.payment_date,
-                mode: f.mode || 'UPI',
+                mode: f.mode || 'Cash',
                 status: f.status || 'Full Paid',
                 notes: f.notes || ''
               };
@@ -228,14 +232,17 @@ class DatabaseService {
             rollNo: s.roll_no || `SSC-2026-${String(s.id).padStart(3, '0')}`,
             name: s.name,
             class: s.class,
-            parentName: s.parent_name,
+            parentName: s.parent_name || '',
+            fatherName: s.parent_name || '',
+            motherName: '',
             phone: s.phone,
             school: s.school || '',
-            joiningDate: s.joining_date ? String(s.joining_date).split('T')[0] : '2026-01-01',
+            joiningDate: s.joining_date ? String(s.joining_date).split('T')[0] : '2026-06-01',
             monthlyFee: Number(s.monthly_fee) || 0,
             advanceAmount: Number(s.advance_amount) || 0,
             advanceDate: s.advance_date ? String(s.advance_date).split('T')[0] : null,
             status: s.status || 'active',
+            paymentStatus: studentFees.length > 0 ? 'Paid' : 'Pending',
             notes: s.notes || '',
             feeHistory: studentFees
           };
@@ -373,6 +380,12 @@ class DatabaseService {
 
       // Persist to local cache and notify listeners
       window.SSCStore.saveToStorage();
+      if (typeof window.updateMetricsDisplay === 'function') {
+        window.updateMetricsDisplay();
+      }
+      if (typeof window.renderStudentsTable === 'function') {
+        window.renderStudentsTable();
+      }
       window.SSCStore.emit('CLOUD_SYNC_COMPLETE', { tablesUpdated: 8 });
       console.log('✅ Successfully hydrated all modules from Supabase PostgreSQL cloud tables.');
       return true;

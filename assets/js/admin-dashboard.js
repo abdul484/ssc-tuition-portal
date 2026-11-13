@@ -141,6 +141,18 @@ function initAdminDashboard() {
     syncPublicViews();
   });
 
+  window.addEventListener('CLOUD_SYNC_COMPLETE', () => {
+    renderAdminHeader();
+    renderAdminTabContent();
+    syncPublicViews();
+  });
+
+  window.addEventListener('STUDENTS_SYNCED_FROM_CLOUD', () => {
+    renderAdminHeader();
+    renderAdminTabContent();
+    syncPublicViews();
+  });
+
   window.addEventListener('sscAuthStateChanged', (e) => {
     checkAdminAuthView(e.detail.isLoggedIn);
   });

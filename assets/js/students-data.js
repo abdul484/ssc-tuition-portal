@@ -1183,12 +1183,14 @@ class StudentsDataStore {
   }
 
   loadFromStorage() {
+    if (window.SSCStore && typeof window.SSCStore.getStudents === 'function') {
+      return window.SSCStore.getStudents();
+    }
     try {
       const saved = localStorage.getItem(STORAGE_KEY_STUDENTS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        const hasOld = Array.isArray(parsed) && parsed.some(s => s.name === 'Poojith' && s.id === 1);
-        if (Array.isArray(parsed) && parsed.length >= 40 && !hasOld) {
+        if (Array.isArray(parsed) && parsed.length >= 30) {
           return parsed;
         }
       }
@@ -1208,10 +1210,16 @@ class StudentsDataStore {
   }
 
   getAll() {
+    if (window.SSCStore && typeof window.SSCStore.getStudents === 'function') {
+      return window.SSCStore.getStudents();
+    }
     return this.students;
   }
 
   getById(id) {
+    if (window.SSCStore && typeof window.SSCStore.getStudentById === 'function') {
+      return window.SSCStore.getStudentById(id);
+    }
     return this.students.find(s => s.id === parseInt(id, 10));
   }
 
@@ -1238,6 +1246,10 @@ class StudentsDataStore {
   }
 
   getMetrics() {
+    if (window.SSCStore && typeof window.SSCStore.getClassStudentCounts === 'function') {
+      const counts = window.SSCStore.getClassStudentCounts();
+      return { total: counts.Total || counts.total || 0, byClass: counts };
+    }
     const total = this.students.length;
     const byClass = {
       'LKG': 0,
