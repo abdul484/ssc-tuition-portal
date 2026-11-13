@@ -9,7 +9,7 @@
  * Official WhatsApp Contact: +91 8919961354 (8919961354)
  */
 
-const SSC_STORE_KEY = 'ssc_tuition_central_store_v4';
+const SSC_STORE_KEY = 'ssc_tuition_central_store_v6';
 const SSC_OFFICIAL_WHATSAPP = '8919961354';
 const SSC_OFFICIAL_PHONE_DISPLAY = '+91 8919961354';
 
@@ -27,6 +27,122 @@ function formatISODateDisplay(isoString) {
   if (isNaN(d.getTime())) return isoString;
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
+
+
+// ==========================================================================
+// STRICT ACADEMIC GRADE HIERARCHY & SORTING ENGINE
+// LKG (1) -> UKG (2) -> 1st (3) -> ... -> 10th (12)
+// ==========================================================================
+const CLASS_HIERARCHY_RANK = {
+  'lkg': 1,
+  'ukg': 2,
+  '1st': 3,
+  '1st class': 3,
+  'class 1': 3,
+  'class 1st': 3,
+  '2nd': 4,
+  '2nd class': 4,
+  'class 2': 4,
+  'class 2nd': 4,
+  '3rd': 5,
+  '3rd class': 5,
+  'class 3': 5,
+  'class 3rd': 5,
+  '4th': 6,
+  '4th class': 6,
+  'class 4': 6,
+  'class 4th': 6,
+  '5th': 7,
+  '5th class': 7,
+  'class 5': 7,
+  'class 5th': 7,
+  '6th': 8,
+  '6th class': 8,
+  'class 6': 8,
+  'class 6th': 8,
+  '7th': 9,
+  '7th class': 9,
+  'class 7': 9,
+  'class 7th': 9,
+  '8th': 10,
+  '8th class': 10,
+  'class 8': 10,
+  'class 8th': 10,
+  '9th': 11,
+  '9th class': 11,
+  'class 9': 11,
+  'class 9th': 11,
+  '10th': 12,
+  '10th class': 12,
+  'class 10': 12,
+  'class 10th': 12
+};
+
+function getAcademicClassRank(className) {
+  if (!className) return 99;
+  const clean = String(className).toLowerCase().trim();
+  if (CLASS_HIERARCHY_RANK[clean] !== undefined) {
+    return CLASS_HIERARCHY_RANK[clean];
+  }
+  const numMatch = clean.match(/\b(\d+)(?:st|nd|rd|th)?\b/);
+  if (numMatch) {
+    const n = parseInt(numMatch[1], 10);
+    if (n >= 1 && n <= 10) return n + 2;
+  }
+  return 99;
+}
+window.getAcademicClassRank = getAcademicClassRank;
+
+function sortStudentList(list, sortOrder = 'class-asc') {
+  if (!Array.isArray(list)) return [];
+  const copy = [...list];
+
+  const extractRollNum = (r) => {
+    if (!r) return 0;
+    const m = String(r).match(/\d+/g);
+    return m ? parseInt(m[m.length - 1], 10) : 0;
+  };
+
+  copy.sort((a, b) => {
+    const classA = a.class || a.studentClass || '';
+    const classB = b.class || b.studentClass || '';
+    const rankA = getAcademicClassRank(classA);
+    const rankB = getAcademicClassRank(classB);
+
+    const nameA = (a.name || a.studentName || '').toLowerCase().trim();
+    const nameB = (b.name || b.studentName || '').toLowerCase().trim();
+
+    const rollA = a.rollNo || a.roll_no || `SSC-${a.id || a.studentId || 0}`;
+    const rollB = b.rollNo || b.roll_no || `SSC-${b.id || b.studentId || 0}`;
+
+    if (sortOrder === 'class-asc') {
+      if (rankA !== rankB) return rankA - rankB;
+      const nameCmp = nameA.localeCompare(nameB);
+      if (nameCmp !== 0) return nameCmp;
+      return extractRollNum(rollA) - extractRollNum(rollB);
+    } else if (sortOrder === 'class-desc') {
+      if (rankA !== rankB) return rankB - rankA;
+      const nameCmp = nameA.localeCompare(nameB);
+      if (nameCmp !== 0) return nameCmp;
+      return extractRollNum(rollA) - extractRollNum(rollB);
+    } else if (sortOrder === 'name-asc') {
+      const nameCmp = nameA.localeCompare(nameB);
+      if (nameCmp !== 0) return nameCmp;
+      return rankA - rankB;
+    } else if (sortOrder === 'roll-asc') {
+      const numA = extractRollNum(rollA);
+      const numB = extractRollNum(rollB);
+      if (numA !== numB) return numA - numB;
+      return nameA.localeCompare(nameB);
+    }
+
+    if (rankA !== rankB) return rankA - rankB;
+    return nameA.localeCompare(nameB);
+  });
+
+  return copy;
+}
+window.sortStudentList = sortStudentList;
 
 // Initial Classes (LKG through 10th Class)
 const INITIAL_CLASSES = [
@@ -64,216 +180,1170 @@ const INITIAL_BOOKS = [
 // Initial Registered Students (ISO dates, 10-digit mobile numbers, Fee History covering Full, Half/Partial, and Pending states)
 const INITIAL_STUDENTS = [
   {
-    id: 1,
-    rollNo: 'SSC-2026-001',
-    name: 'Poojith Reddy',
-    class: '6th Class',
-    parentName: 'Venkat Rao',
-    phone: '9849012345',
-    school: 'St. Mary High School',
-    joiningDate: '2026-01-05',
-    monthlyFee: 1500,
-    advanceAmount: 1500,
-    notes: 'Excels in Arithmetic, needs guidance in English composition.',
+    id: 101,
+    rollNo: 'SSC-101',
+    name: "B. Sahasra",
+    class: "1st Class",
+    parentName: "Chinnammalu",
+    fatherName: "Chinnammalu",
+    motherName: '',
+    phone: '7093926533',
+    school: "",
+    joiningDate: '2026-06-05',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-06-08',
     status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 1st Class tuition program.',
     feeHistory: [
-      { id: 'PAY-1001', receiptNo: 'REC-202601-101', year: 2026, month: 1, amount: 1500, date: '2026-01-05', mode: 'UPI', notes: 'Advance fee collected at joining' },
-      { id: 'PAY-1002', receiptNo: 'REC-202602-101', year: 2026, month: 2, amount: 1500, date: '2026-02-06', mode: 'UPI', notes: 'February tuition fee cleared' },
-      { id: 'PAY-1003', receiptNo: 'REC-202603-101', year: 2026, month: 3, amount: 750, date: '2026-03-05', mode: 'UPI', notes: 'Part 1 payment paid (Balance ₹750)' }
+      {
+        id: 'PAY-101',
+        receiptNo: 'REC-202606-101',
+        year: 2026,
+        month: 6,
+        amount: 250,
+        date: '2026-06-08',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
     ]
   },
   {
-    id: 2,
-    rollNo: 'SSC-2026-002',
-    name: 'Lasya Priya',
-    class: '5th Class',
-    parentName: 'Srinivas Murthy',
-    phone: '9123456789',
-    school: 'Kendriya Vidyalaya',
-    joiningDate: '2026-01-10',
-    monthlyFee: 1400,
-    advanceAmount: 1400,
-    notes: 'Good in reading, focused on Science foundations.',
+    id: 102,
+    rollNo: 'SSC-102',
+    name: "G. Abhi",
+    class: "1st Class",
+    parentName: "Santhoshi",
+    fatherName: "Santhoshi",
+    motherName: '',
+    phone: '9014492194',
+    school: "",
+    joiningDate: '2026-06-01',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-06-17',
     status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 1st Class tuition program.',
     feeHistory: [
-      { id: 'PAY-1004', receiptNo: 'REC-202601-102', year: 2026, month: 1, amount: 1400, date: '2026-01-10', mode: 'Cash', notes: 'January fee paid' },
-      { id: 'PAY-1005', receiptNo: 'REC-202602-102', year: 2026, month: 2, amount: 700, date: '2026-02-10', mode: 'Cash', notes: 'First installment paid (Balance ₹700)' },
-      { id: 'PAY-1006', receiptNo: 'REC-202602-103', year: 2026, month: 2, amount: 700, date: '2026-02-18', mode: 'UPI', notes: 'Second installment cleared (Full Paid)' }
+      {
+        id: 'PAY-102',
+        receiptNo: 'REC-202606-102',
+        year: 2026,
+        month: 6,
+        amount: 250,
+        date: '2026-06-17',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
     ]
   },
   {
-    id: 3,
-    rollNo: 'SSC-2026-003',
-    name: 'Rohan Sharma',
-    class: '4th Class',
-    parentName: 'Rajesh Sharma',
-    phone: '9988766554',
-    school: 'Delhi Public School',
-    joiningDate: '2026-01-15',
-    monthlyFee: 1300,
+    id: 103,
+    rollNo: 'SSC-103',
+    name: "T. Mokshasri",
+    class: "1st Class",
+    parentName: "Raju",
+    fatherName: "Raju",
+    motherName: '',
+    phone: '7013529077',
+    school: "",
+    joiningDate: '2026-06-13',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-06-18',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 1st Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-103',
+        receiptNo: 'REC-202606-103',
+        year: 2026,
+        month: 6,
+        amount: 250,
+        date: '2026-06-18',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 104,
+    rollNo: 'SSC-104',
+    name: "P. Greeshmanth",
+    class: "1st Class",
+    parentName: "Anusha",
+    fatherName: "Anusha",
+    motherName: '',
+    phone: '8143624278',
+    school: "",
+    joiningDate: '2026-06-01',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-06-18',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 1st Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-104',
+        receiptNo: 'REC-202606-104',
+        year: 2026,
+        month: 6,
+        amount: 250,
+        date: '2026-06-18',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 105,
+    rollNo: 'SSC-105',
+    name: "S. Deekshith",
+    class: "2nd Class",
+    parentName: "S. Venkata Ramana",
+    fatherName: "S. Venkata Ramana",
+    motherName: '',
+    phone: '9550147016',
+    school: "",
+    joiningDate: '2026-06-01',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-07-12',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 2nd Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-105',
+        receiptNo: 'REC-202607-105',
+        year: 2026,
+        month: 7,
+        amount: 250,
+        date: '2026-07-12',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 106,
+    rollNo: 'SSC-106',
+    name: "Shanmukh",
+    class: "2nd Class",
+    parentName: "Kanaka Laxmi",
+    fatherName: "Kanaka Laxmi",
+    motherName: '',
+    phone: '9652695362',
+    school: "",
+    joiningDate: '2026-06-06',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-06-18',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 2nd Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-106',
+        receiptNo: 'REC-202606-106',
+        year: 2026,
+        month: 6,
+        amount: 250,
+        date: '2026-06-18',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 107,
+    rollNo: 'SSC-107',
+    name: "Neeha",
+    class: "2nd Class",
+    parentName: "Padma",
+    fatherName: "Padma",
+    motherName: '',
+    phone: '9949122500',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-07-01',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 2nd Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-107',
+        receiptNo: 'REC-202607-107',
+        year: 2026,
+        month: 7,
+        amount: 250,
+        date: '2026-07-01',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 108,
+    rollNo: 'SSC-108',
+    name: "Mustafa",
+    class: "2nd Class",
+    parentName: "Asgari Khatoon",
+    fatherName: "Asgari Khatoon",
+    motherName: '',
+    phone: '7661917205',
+    school: "",
+    joiningDate: '2026-07-02',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-08-21',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 2nd Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-108',
+        receiptNo: 'REC-202608-108',
+        year: 2026,
+        month: 8,
+        amount: 250,
+        date: '2026-08-21',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 109,
+    rollNo: 'SSC-109',
+    name: "R. Moksha Sri",
+    class: "2nd Class",
+    parentName: "R. Laxmi",
+    fatherName: "R. Laxmi",
+    motherName: '',
+    phone: '9959999331',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-07-10',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 2nd Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-109',
+        receiptNo: 'REC-202607-109',
+        year: 2026,
+        month: 7,
+        amount: 250,
+        date: '2026-07-10',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 110,
+    rollNo: 'SSC-110',
+    name: "B. Harshith",
+    class: "3rd Class",
+    parentName: "Chinnammalu",
+    fatherName: "Chinnammalu",
+    motherName: '',
+    phone: '7093926533',
+    school: "",
+    joiningDate: '2026-06-05',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-06-08',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 3rd Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-110',
+        receiptNo: 'REC-202606-110',
+        year: 2026,
+        month: 6,
+        amount: 250,
+        date: '2026-06-08',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 111,
+    rollNo: 'SSC-111',
+    name: "K. Praneeth",
+    class: "3rd Class",
+    parentName: "Kalavathi",
+    fatherName: "Kalavathi",
+    motherName: '',
+    phone: '8522987724',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-07-15',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 3rd Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-111',
+        receiptNo: 'REC-202607-111',
+        year: 2026,
+        month: 7,
+        amount: 250,
+        date: '2026-07-15',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 112,
+    rollNo: 'SSC-112',
+    name: "Pragna",
+    class: "3rd Class",
+    parentName: "P. Laxmi",
+    fatherName: "P. Laxmi",
+    motherName: '',
+    phone: '7989400223',
+    school: "",
+    joiningDate: '2026-08-05',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-08-05',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 3rd Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-112',
+        receiptNo: 'REC-202608-112',
+        year: 2026,
+        month: 8,
+        amount: 250,
+        date: '2026-08-05',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 113,
+    rollNo: 'SSC-113',
+    name: "L. Lohith",
+    class: "3rd Class",
+    parentName: "Rama Devi",
+    fatherName: "Rama Devi",
+    motherName: '',
+    phone: '8498072498',
+    school: "",
+    joiningDate: '2026-11-02',
+    monthlyFee: 250,
     advanceAmount: 0,
-    notes: 'Regular student, very attentive in mental math.',
+    advanceDate: '2026-11-02',
     status: 'active',
+    paymentStatus: 'Pending',
+    notes: 'Enrolled in 3rd Class tuition program.',
+    feeHistory: []
+  },
+  {
+    id: 114,
+    rollNo: 'SSC-114',
+    name: "Asif",
+    class: "LKG",
+    parentName: "Sk. Fathima",
+    fatherName: "Sk. Fathima",
+    motherName: '',
+    phone: '9603639829',
+    school: "",
+    joiningDate: '2026-06-28',
+    monthlyFee: 150,
+    advanceAmount: 150,
+    advanceDate: '2026-06-28',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in LKG tuition program.',
     feeHistory: [
-      { id: 'PAY-1007', receiptNo: 'REC-202601-103', year: 2026, month: 1, amount: 1300, date: '2026-01-15', mode: 'UPI', notes: 'January fee paid via GPay' },
-      { id: 'PAY-1008', receiptNo: 'REC-202602-104', year: 2026, month: 2, amount: 650, date: '2026-02-15', mode: 'Cash', notes: 'Half fee paid (Remaining ₹650)' }
+      {
+        id: 'PAY-114',
+        receiptNo: 'REC-202606-114',
+        year: 2026,
+        month: 6,
+        amount: 150,
+        date: '2026-06-28',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
     ]
   },
   {
-    id: 4,
-    rollNo: 'SSC-2026-004',
-    name: 'Saanvi K.',
-    class: '3rd Class',
-    parentName: 'Naveen Kumar',
-    phone: '9012345678',
-    school: 'Bhavans Vidya Mandir',
-    joiningDate: '2026-01-20',
-    monthlyFee: 1200,
-    advanceAmount: 1200,
-    notes: 'Needs daily practice in cursive handwriting.',
+    id: 115,
+    rollNo: 'SSC-115',
+    name: "Naveen",
+    class: "LKG",
+    parentName: "",
+    fatherName: "",
+    motherName: '',
+    phone: '8688491685',
+    school: "",
+    joiningDate: '2026-06-03',
+    monthlyFee: 150,
+    advanceAmount: 150,
+    advanceDate: '2026-06-03',
     status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in LKG tuition program.',
     feeHistory: [
-      { id: 'PAY-1009', receiptNo: 'REC-202601-104', year: 2026, month: 1, amount: 1200, date: '2026-01-20', mode: 'Cash', notes: 'Paid in full' }
+      {
+        id: 'PAY-115',
+        receiptNo: 'REC-202606-115',
+        year: 2026,
+        month: 6,
+        amount: 150,
+        date: '2026-06-03',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
     ]
   },
   {
-    id: 5,
-    rollNo: 'SSC-2026-005',
-    name: 'Aditya Varma',
-    class: '7th Class',
-    parentName: 'Prasad Varma',
-    phone: '9345678901',
-    school: 'Chaitanya Techno School',
-    joiningDate: '2026-01-08',
-    monthlyFee: 1600,
+    id: 116,
+    rollNo: 'SSC-116',
+    name: "Purnima",
+    class: "UKG",
+    parentName: "",
+    fatherName: "",
+    motherName: '',
+    phone: '',
+    school: "",
+    joiningDate: '2026-06-03',
+    monthlyFee: 200,
+    advanceAmount: 200,
+    advanceDate: '2026-06-03',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in UKG tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-116',
+        receiptNo: 'REC-202606-116',
+        year: 2026,
+        month: 6,
+        amount: 200,
+        date: '2026-06-03',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 117,
+    rollNo: 'SSC-117',
+    name: "Puneeth",
+    class: "1st Class",
+    parentName: "Venkata",
+    fatherName: "Venkata",
+    motherName: '',
+    phone: '',
+    school: "",
+    joiningDate: '2026-06-01',
+    monthlyFee: 200,
+    advanceAmount: 200,
+    advanceDate: '2026-06-01',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 1st Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-117',
+        receiptNo: 'REC-202606-117',
+        year: 2026,
+        month: 6,
+        amount: 200,
+        date: '2026-06-01',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 118,
+    rollNo: 'SSC-118',
+    name: "S. Yamini",
+    class: "2nd Class",
+    parentName: "",
+    fatherName: "",
+    motherName: '',
+    phone: '',
+    school: "",
+    joiningDate: '2026-06-01',
+    monthlyFee: 250,
     advanceAmount: 0,
-    notes: 'Focusing on Algebra linear equations.',
+    advanceDate: '2026-06-01',
     status: 'active',
-    feeHistory: [
-      { id: 'PAY-1010', receiptNo: 'REC-202601-105', year: 2026, month: 1, amount: 1600, date: '2026-01-08', mode: 'UPI', notes: 'January paid' },
-      { id: 'PAY-1011', receiptNo: 'REC-202602-105', year: 2026, month: 2, amount: 1600, date: '2026-02-09', mode: 'UPI', notes: 'February paid' }
-    ]
+    paymentStatus: 'Pending',
+    notes: 'Enrolled in 2nd Class tuition program.',
+    feeHistory: []
   },
   {
-    id: 6,
-    rollNo: 'SSC-2026-006',
-    name: 'Ananya S.',
-    class: '2nd Class',
-    parentName: 'Sudhakar',
-    phone: '9848123456',
-    school: 'St. Ann’s High School',
-    joiningDate: '2026-02-01',
-    monthlyFee: 1100,
-    advanceAmount: 1100,
-    notes: 'Energetic learner, strong reading fluency.',
-    status: 'active',
-    feeHistory: [
-      { id: 'PAY-1012', receiptNo: 'REC-202602-106', year: 2026, month: 2, amount: 1100, date: '2026-02-01', mode: 'Cash', notes: 'Advance fee collected' }
-    ]
-  },
-  {
-    id: 7,
-    rollNo: 'SSC-2026-007',
-    name: 'Karthik Teja',
-    class: '10th Class',
-    parentName: 'Ramesh Babu',
-    phone: '9908123456',
-    school: 'Narayana High School',
-    joiningDate: '2026-01-02',
-    monthlyFee: 2000,
-    advanceAmount: 2000,
-    notes: 'Board Exam batch, preparing Trigonometry.',
-    status: 'active',
-    feeHistory: [
-      { id: 'PAY-1013', receiptNo: 'REC-202601-106', year: 2026, month: 1, amount: 2000, date: '2026-01-02', mode: 'UPI', notes: 'January fee paid' },
-      { id: 'PAY-1014', receiptNo: 'REC-202602-107', year: 2026, month: 2, amount: 1000, date: '2026-02-05', mode: 'UPI', notes: 'Half fee paid ₹1,000' }
-    ]
-  },
-  {
-    id: 8,
-    rollNo: 'SSC-2026-008',
-    name: 'Tanvi M.',
-    class: 'LKG',
-    parentName: 'Manohar',
-    phone: '9701234567',
-    school: 'EuroKids Preschool',
-    joiningDate: '2026-02-15',
-    monthlyFee: 1000,
-    advanceAmount: 1000,
-    notes: 'Early phonics, letter tracing and counting.',
-    status: 'active',
-    feeHistory: [
-      { id: 'PAY-1015', receiptNo: 'REC-202602-108', year: 2026, month: 2, amount: 1000, date: '2026-02-15', mode: 'Cash', notes: 'February enrollment fee paid' }
-    ]
-  },
-  {
-    id: 9,
-    rollNo: 'SSC-2026-009',
-    name: 'Aryan Goud',
-    class: 'UKG',
-    parentName: 'Mallikarjun',
-    phone: '9652134567',
-    school: 'Little Angels School',
-    joiningDate: '2026-01-18',
-    monthlyFee: 1000,
-    advanceAmount: 1000,
-    notes: 'Word formation, rhymes, daily activity sheet.',
-    status: 'active',
-    feeHistory: [
-      { id: 'PAY-1016', receiptNo: 'REC-202601-107', year: 2026, month: 1, amount: 1000, date: '2026-01-18', mode: 'Cash', notes: 'January fee paid' }
-    ]
-  },
-  {
-    id: 10,
-    rollNo: 'SSC-2026-010',
-    name: 'Bhavana Ch.',
-    class: '1st Class',
-    parentName: 'Chandrashekar',
-    phone: '9866123456',
-    school: 'St. Joseph School',
-    joiningDate: '2026-01-12',
-    monthlyFee: 1100,
+    id: 119,
+    rollNo: 'SSC-119',
+    name: "S. Sathwik",
+    class: "2nd Class",
+    parentName: "",
+    fatherName: "",
+    motherName: '',
+    phone: '',
+    school: "",
+    joiningDate: '2026-06-01',
+    monthlyFee: 250,
     advanceAmount: 0,
-    notes: 'Reading practice and number operations 1-100.',
+    advanceDate: '2026-06-01',
     status: 'active',
+    paymentStatus: 'Pending',
+    notes: 'Enrolled in 2nd Class tuition program.',
+    feeHistory: []
+  },
+  {
+    id: 120,
+    rollNo: 'SSC-120',
+    name: "P. Jaswanth",
+    class: "3rd Class",
+    parentName: "P. Mariya",
+    fatherName: "P. Mariya",
+    motherName: '',
+    phone: '8522975783',
+    school: "",
+    joiningDate: '2026-07-21',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-07-21',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 3rd Class tuition program.',
     feeHistory: [
-      { id: 'PAY-1017', receiptNo: 'REC-202601-108', year: 2026, month: 1, amount: 1100, date: '2026-01-12', mode: 'UPI', notes: 'Paid in full' },
-      { id: 'PAY-1018', receiptNo: 'REC-202602-109', year: 2026, month: 2, amount: 550, date: '2026-02-14', mode: 'Cash', notes: 'Half fee paid (Remaining ₹550)' }
+      {
+        id: 'PAY-120',
+        receiptNo: 'REC-202607-120',
+        year: 2026,
+        month: 7,
+        amount: 250,
+        date: '2026-07-21',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
     ]
   },
   {
-    id: 11,
-    rollNo: 'SSC-2026-011',
-    name: 'Varun Tej',
-    class: '8th Class',
-    parentName: 'Gopal Krishna',
-    phone: '9440123456',
-    school: 'State High School',
-    joiningDate: '2026-01-04',
-    monthlyFee: 1700,
-    advanceAmount: 1700,
-    notes: 'Science and Mathematics foundation.',
+    id: 121,
+    rollNo: 'SSC-121',
+    name: "K. Rithik",
+    class: "4th Class",
+    parentName: "",
+    fatherName: "",
+    motherName: '',
+    phone: '',
+    school: "",
+    joiningDate: '2026-09-01',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-09-01',
     status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 4th Class tuition program.',
     feeHistory: [
-      { id: 'PAY-1019', receiptNo: 'REC-202601-109', year: 2026, month: 1, amount: 1700, date: '2026-01-04', mode: 'UPI', notes: 'January fee cleared' },
-      { id: 'PAY-1020', receiptNo: 'REC-202602-110', year: 2026, month: 2, amount: 1700, date: '2026-02-05', mode: 'UPI', notes: 'February fee cleared' }
+      {
+        id: 'PAY-121',
+        receiptNo: 'REC-202609-121',
+        year: 2026,
+        month: 9,
+        amount: 250,
+        date: '2026-09-01',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
     ]
   },
   {
-    id: 12,
-    rollNo: 'SSC-2026-012',
-    name: 'Meghana R.',
-    class: '9th Class',
-    parentName: 'Ravinder Rao',
-    phone: '9391123456',
-    school: 'Kendriya Vidyalaya Picket',
-    joiningDate: '2026-01-25',
-    monthlyFee: 1800,
-    advanceAmount: 0,
-    notes: 'Focus on Physics numericals and Chemistry symbols.',
+    id: 122,
+    rollNo: 'SSC-122',
+    name: "V. Bhuvana",
+    class: "4th Class",
+    parentName: "Gayathri",
+    fatherName: "Gayathri",
+    motherName: '',
+    phone: '7989099355',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-07-16',
     status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 4th Class tuition program.',
     feeHistory: [
-      { id: 'PAY-1021', receiptNo: 'REC-202601-110', year: 2026, month: 1, amount: 900, date: '2026-01-25', mode: 'UPI', notes: 'Partial payment paid (Balance ₹900)' }
+      {
+        id: 'PAY-122',
+        receiptNo: 'REC-202607-122',
+        year: 2026,
+        month: 7,
+        amount: 250,
+        date: '2026-07-16',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 123,
+    rollNo: 'SSC-123',
+    name: "G. Bhuvana",
+    class: "4th Class",
+    parentName: "Rama Laxmi",
+    fatherName: "Rama Laxmi",
+    motherName: '',
+    phone: '8096705337',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-07-01',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 4th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-123',
+        receiptNo: 'REC-202607-123',
+        year: 2026,
+        month: 7,
+        amount: 250,
+        date: '2026-07-01',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 124,
+    rollNo: 'SSC-124',
+    name: "L. Lasya",
+    class: "4th Class",
+    parentName: "Kalavathi",
+    fatherName: "Kalavathi",
+    motherName: '',
+    phone: '7013223101',
+    school: "",
+    joiningDate: '2026-08-04',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-08-26',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 4th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-124',
+        receiptNo: 'REC-202608-124',
+        year: 2026,
+        month: 8,
+        amount: 250,
+        date: '2026-08-26',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 125,
+    rollNo: 'SSC-125',
+    name: "Ch. Thamish",
+    class: "5th Class",
+    parentName: "Ch. Ramesh",
+    fatherName: "Ch. Ramesh",
+    motherName: '',
+    phone: '7013244281',
+    school: "",
+    joiningDate: '2026-06-18',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-06-20',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 5th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-125',
+        receiptNo: 'REC-202606-125',
+        year: 2026,
+        month: 6,
+        amount: 250,
+        date: '2026-06-20',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 126,
+    rollNo: 'SSC-126',
+    name: "M.D. Golam Nabi",
+    class: "5th Class",
+    parentName: "Asgari Khatoon",
+    fatherName: "Asgari Khatoon",
+    motherName: '',
+    phone: '7661917205',
+    school: "",
+    joiningDate: '2026-07-02',
+    monthlyFee: 250,
+    advanceAmount: 250,
+    advanceDate: '2026-08-21',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 5th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-126',
+        receiptNo: 'REC-202608-126',
+        year: 2026,
+        month: 8,
+        amount: 250,
+        date: '2026-08-21',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 127,
+    rollNo: 'SSC-127',
+    name: "R. Deepika",
+    class: "6th Class",
+    parentName: "R. Laxmi",
+    fatherName: "R. Laxmi",
+    motherName: '',
+    phone: '9959999331',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 300,
+    advanceAmount: 300,
+    advanceDate: '2026-07-10',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 6th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-127',
+        receiptNo: 'REC-202607-127',
+        year: 2026,
+        month: 7,
+        amount: 300,
+        date: '2026-07-10',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 128,
+    rollNo: 'SSC-128',
+    name: "S. Siva Karthik",
+    class: "6th Class",
+    parentName: "S. Venkata Ramana",
+    fatherName: "S. Venkata Ramana",
+    motherName: '',
+    phone: '9550147016',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 300,
+    advanceAmount: 300,
+    advanceDate: '2026-07-12',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 6th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-128',
+        receiptNo: 'REC-202607-128',
+        year: 2026,
+        month: 7,
+        amount: 300,
+        date: '2026-07-12',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 129,
+    rollNo: 'SSC-129',
+    name: "V. Chandini",
+    class: "6th Class",
+    parentName: "V. Gayathri",
+    fatherName: "V. Gayathri",
+    motherName: '',
+    phone: '7989099355',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 300,
+    advanceAmount: 300,
+    advanceDate: '2026-07-16',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 6th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-129',
+        receiptNo: 'REC-202607-129',
+        year: 2026,
+        month: 7,
+        amount: 300,
+        date: '2026-07-16',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 130,
+    rollNo: 'SSC-130',
+    name: "Hasritha",
+    class: "6th Class",
+    parentName: "P. Laxmi",
+    fatherName: "P. Laxmi",
+    motherName: '',
+    phone: '7989400223',
+    school: "",
+    joiningDate: '2026-08-05',
+    monthlyFee: 300,
+    advanceAmount: 300,
+    advanceDate: '2026-08-15',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 6th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-130',
+        receiptNo: 'REC-202608-130',
+        year: 2026,
+        month: 8,
+        amount: 300,
+        date: '2026-08-15',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 131,
+    rollNo: 'SSC-131',
+    name: "P. Karthik",
+    class: "6th Class",
+    parentName: "P. Sita",
+    fatherName: "P. Sita",
+    motherName: '',
+    phone: '8367044796',
+    school: "",
+    joiningDate: '2026-08-14',
+    monthlyFee: 300,
+    advanceAmount: 300,
+    advanceDate: '2026-09-01',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 6th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-131',
+        receiptNo: 'REC-202609-131',
+        year: 2026,
+        month: 9,
+        amount: 300,
+        date: '2026-09-01',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 132,
+    rollNo: 'SSC-132',
+    name: "L. Poojith",
+    class: "7th Class",
+    parentName: "L. Satyanarayana",
+    fatherName: "L. Satyanarayana",
+    motherName: '',
+    phone: '7013223101',
+    school: "",
+    joiningDate: '2026-07-03',
+    monthlyFee: 350,
+    advanceAmount: 350,
+    advanceDate: '2026-07-24',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 7th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-132',
+        receiptNo: 'REC-202607-132',
+        year: 2026,
+        month: 7,
+        amount: 350,
+        date: '2026-07-24',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 133,
+    rollNo: 'SSC-133',
+    name: "Ch. Dilleshwara",
+    class: "7th Class",
+    parentName: "Ch. Ramesh",
+    fatherName: "Ch. Ramesh",
+    motherName: '',
+    phone: '7013244281',
+    school: "",
+    joiningDate: '2026-06-18',
+    monthlyFee: 350,
+    advanceAmount: 350,
+    advanceDate: '2026-06-26',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 7th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-133',
+        receiptNo: 'REC-202606-133',
+        year: 2026,
+        month: 6,
+        amount: 350,
+        date: '2026-06-26',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 134,
+    rollNo: 'SSC-134',
+    name: "G. Bhuvan",
+    class: "7th Class",
+    parentName: "Rama Laxmi",
+    fatherName: "Rama Laxmi",
+    motherName: '',
+    phone: '8096705337',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 350,
+    advanceAmount: 350,
+    advanceDate: '2026-07-01',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 7th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-134',
+        receiptNo: 'REC-202607-134',
+        year: 2026,
+        month: 7,
+        amount: 350,
+        date: '2026-07-01',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 135,
+    rollNo: 'SSC-135',
+    name: "G. Govind Sai",
+    class: "7th Class",
+    parentName: "Santhoshi",
+    fatherName: "Santhoshi",
+    motherName: '',
+    phone: '9014492194',
+    school: "",
+    joiningDate: '2026-06-01',
+    monthlyFee: 350,
+    advanceAmount: 350,
+    advanceDate: '2026-06-17',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 7th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-135',
+        receiptNo: 'REC-202606-135',
+        year: 2026,
+        month: 6,
+        amount: 350,
+        date: '2026-06-17',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 136,
+    rollNo: 'SSC-136',
+    name: "K. Sharmila",
+    class: "7th Class",
+    parentName: "Kalavathi",
+    fatherName: "Kalavathi",
+    motherName: '',
+    phone: '8522987724',
+    school: "",
+    joiningDate: '2026-07-01',
+    monthlyFee: 350,
+    advanceAmount: 350,
+    advanceDate: '2026-07-15',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 7th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-136',
+        receiptNo: 'REC-202607-136',
+        year: 2026,
+        month: 7,
+        amount: 350,
+        date: '2026-07-15',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 137,
+    rollNo: 'SSC-137',
+    name: "N. Manasa",
+    class: "7th Class",
+    parentName: "Bhavani",
+    fatherName: "Bhavani",
+    motherName: '',
+    phone: '7680847263',
+    school: "",
+    joiningDate: '2026-06-24',
+    monthlyFee: 350,
+    advanceAmount: 350,
+    advanceDate: '2026-07-27',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 7th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-137',
+        receiptNo: 'REC-202607-137',
+        year: 2026,
+        month: 7,
+        amount: 350,
+        date: '2026-07-27',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 138,
+    rollNo: 'SSC-138',
+    name: "Aamna Khatoon",
+    class: "7th Class",
+    parentName: "Asgari Khatoon",
+    fatherName: "Asgari Khatoon",
+    motherName: '',
+    phone: '7661917205',
+    school: "",
+    joiningDate: '2026-07-02',
+    monthlyFee: 350,
+    advanceAmount: 350,
+    advanceDate: '2026-08-21',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 7th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-138',
+        receiptNo: 'REC-202608-138',
+        year: 2026,
+        month: 8,
+        amount: 350,
+        date: '2026-08-21',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 139,
+    rollNo: 'SSC-139',
+    name: "M. Mokshitha",
+    class: "8th Class",
+    parentName: "Nagaratnam",
+    fatherName: "Nagaratnam",
+    motherName: '',
+    phone: '8096473557',
+    school: "",
+    joiningDate: '2026-09-26',
+    monthlyFee: 400,
+    advanceAmount: 400,
+    advanceDate: '2026-10-29',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 8th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-139',
+        receiptNo: 'REC-202610-139',
+        year: 2026,
+        month: 10,
+        amount: 400,
+        date: '2026-10-29',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
+    ]
+  },
+  {
+    id: 140,
+    rollNo: 'SSC-140',
+    name: "Ch. Gowthami Lasya",
+    class: "9th Class",
+    parentName: "Santhoshi",
+    fatherName: "Santhoshi",
+    motherName: '',
+    phone: '8179933203',
+    school: "",
+    joiningDate: '2026-06-19',
+    monthlyFee: 400,
+    advanceAmount: 400,
+    advanceDate: '2026-06-12',
+    status: 'active',
+    paymentStatus: 'Paid',
+    notes: 'Enrolled in 9th Class tuition program.',
+    feeHistory: [
+      {
+        id: 'PAY-140',
+        receiptNo: 'REC-202606-140',
+        year: 2026,
+        month: 6,
+        amount: 400,
+        date: '2026-06-12',
+        mode: 'Cash',
+        notes: 'Advance tuition fee credited at enrollment'
+      }
     ]
   }
 ];
@@ -355,10 +1425,16 @@ class CentralSSCStore {
 
   loadFromStorage() {
     try {
+      // Remove deprecated store keys
+      ['ssc_tuition_central_store_v5', 'ssc_tuition_central_store_v4', 'ssc_tuition_central_store_v3', 'ssc_tuition_central_store_v2', 'ssc_tuition_central_store_v1', 'ssc_students_records_v4', 'ssc_students_records_v3', 'ssc_students_records_v2', 'ssc_students_records_v1'].forEach(k => {
+        try { localStorage.removeItem(k); } catch (e) {}
+      });
+
       const saved = localStorage.getItem(SSC_STORE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && Array.isArray(parsed.students) && parsed.students.length > 0) {
+        const hasOldData = parsed.students && parsed.students.some(s => s.name === 'Poojith Reddy' || s.rollNo === 'SSC-2026-001');
+        if (parsed && Array.isArray(parsed.students) && parsed.students.length >= 40 && !hasOldData) {
           if (!Array.isArray(parsed.recycleBin)) parsed.recycleBin = [];
           if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
           return parsed;
@@ -427,7 +1503,7 @@ class CentralSSCStore {
   // 1. STUDENTS MANAGEMENT (CRUD & INTERLINKING)
   // ========================================================================
   getStudents() {
-    return this.state.students || [];
+    return sortStudentList(this.state.students || [], 'class-asc');
   }
 
   getStudentById(id) {
@@ -545,6 +1621,18 @@ class CentralSSCStore {
       student.advanceAmount = Math.max(0, Number(fields.advanceAmount));
     }
 
+    if (fields.status !== undefined) {
+      const normalized = (fields.status === 'discontinued' || fields.status === 'inactive') ? 'discontinued' : 'active';
+      student.status = normalized;
+      if (normalized === 'discontinued') {
+        if (!student.discontinuedDate) {
+          student.discontinuedDate = fields.discontinuedDate || new Date().toISOString().split('T')[0];
+        }
+      } else {
+        delete student.discontinuedDate;
+      }
+    }
+
     // Real-Time Cloud Sync: Supabase PostgreSQL
     if (window.DatabaseService) {
       window.DatabaseService.syncStudentUpdate(student.id, student);
@@ -586,9 +1674,58 @@ class CentralSSCStore {
     return true;
   }
 
+  // Student Continue / Discontinue Status Management
+  setStudentStatus(studentId, newStatus) {
+    const numId = Number(studentId);
+    const student = this.getStudentById(numId);
+    if (!student) return null;
+
+    const normalized = (newStatus === 'discontinued' || newStatus === 'inactive') ? 'discontinued' : 'active';
+    student.status = normalized;
+    if (normalized === 'discontinued') {
+      if (!student.discontinuedDate) {
+        student.discontinuedDate = new Date().toISOString().split('T')[0];
+      }
+    } else {
+      delete student.discontinuedDate;
+    }
+
+    // Real-Time Cloud Sync: Supabase PostgreSQL
+    if (window.DatabaseService && typeof window.DatabaseService.syncStudentUpdate === 'function') {
+      window.DatabaseService.syncStudentUpdate(student.id, student);
+    }
+
+    this.saveToStorage();
+    this.emit('STUDENT_STATUS_CHANGED', { student, status: normalized });
+    return student;
+  }
+
+  toggleStudentStatus(studentId) {
+    const student = this.getStudentById(Number(studentId));
+    if (!student) return null;
+    const isDisc = student.status === 'discontinued' || student.status === 'inactive';
+    const nextStatus = isDisc ? 'active' : 'discontinued';
+    return this.setStudentStatus(student.id, nextStatus);
+  }
+
+  deleteFeePayment(studentId, paymentId) {
+    const student = this.getStudentById(Number(studentId));
+    if (!student || !Array.isArray(student.feeHistory)) return false;
+
+    const idx = student.feeHistory.findIndex(p => p.id === paymentId || p.receiptNo === paymentId);
+    if (idx === -1) return false;
+
+    const deleted = student.feeHistory.splice(idx, 1)[0];
+    this.saveToStorage();
+    this.emit('FEE_PAYMENT_DELETED', { studentId: student.id, payment: deleted });
+    return true;
+  }
+
   // Dynamic Class Counts for Top Summary Cards
   getClassStudentCounts() {
-    const students = this.getStudents().filter(s => s.status === 'active');
+    const allStudents = this.getStudents();
+    const students = allStudents.filter(s => s.status !== 'discontinued' && s.status !== 'inactive');
+    const discontinuedStudents = allStudents.filter(s => s.status === 'discontinued' || s.status === 'inactive');
     const counts = {
       total: students.length,
       Total: students.length,
@@ -630,24 +1767,53 @@ class CentralSSCStore {
     const student = this.getStudentById(studentId);
     if (!student) return null;
 
-    // Check if student joined on or before this month
-    const [jYear, jMonth, jDay] = (student.joiningDate || '2026-01-01').split('-').map(Number);
-    const isEnrolledInMonth = (year > jYear) || (year === jYear && month >= jMonth);
-
-    if (!isEnrolledInMonth || student.status === 'inactive') {
-      return null; // Not applicable for this month
-    }
-
     // Auto-derive Due Date from student's joining day
+    const [jYear, jMonth, jDay] = (student.joiningDate || '2026-06-01').split('-').map(Number);
     const daysInMonth = new Date(year, month, 0).getDate();
     const dueDay = Math.min(jDay || 1, daysInMonth);
     const dueDateObj = new Date(year, month - 1, dueDay);
     const dueDateDisplay = dueDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-    // Sum payments for this specific month
+    const isDiscontinued = student.status === 'discontinued' || student.status === 'inactive';
+
+    // Sum ONLY payments explicitly recorded in feeHistory for this specific (year, month)
     const monthPayments = (student.feeHistory || []).filter(p => p.year === year && p.month === month);
     const paidAmount = monthPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-    const monthlyFee = Number(student.monthlyFee || 0);
+    const regularMonthlyFee = Number(student.monthlyFee || 0);
+
+    // If student is discontinued and has no payment recorded for this month,
+    // stop generating new monthly pending fee dues for them
+    if (isDiscontinued && paidAmount === 0) {
+      return {
+        studentId: student.id,
+        studentName: student.name,
+        name: student.name,
+        studentClass: student.class,
+        class: student.class,
+        school: student.school || '',
+        rollNo: student.rollNo || `SSC-${student.id}`,
+        parentName: student.parentName || student.fatherName || '',
+        phone: student.phone || '',
+        year,
+        month,
+        monthlyFee: 0,
+        regularMonthlyFee,
+        dueDay,
+        dueDate: '—',
+        dueDateDisplay: '—',
+        paidAmount: 0,
+        balance: 0,
+        status: 'Discontinued',
+        paidDate: '—',
+        paidDateDisplay: '—',
+        isDiscontinued: true,
+        payments: [],
+        transactions: [],
+        latestReceiptNo: null
+      };
+    }
+
+    const monthlyFee = regularMonthlyFee;
     const balance = Math.max(0, monthlyFee - paidAmount);
 
     let status = 'Pending';
@@ -655,10 +1821,14 @@ class CentralSSCStore {
       status = 'Full Paid';
     } else if (paidAmount > 0) {
       status = 'Half Paid';
+    } else {
+      status = 'Pending';
     }
 
     const latestPayment = monthPayments.length > 0 ? monthPayments[monthPayments.length - 1] : null;
-    const paidDateDisplay = latestPayment ? formatISODateDisplay(latestPayment.date) : '—';
+    const paidDateDisplay = latestPayment && latestPayment.date
+      ? formatISODateDisplay(latestPayment.date)
+      : '—';
 
     return {
       studentId: student.id,
@@ -666,34 +1836,37 @@ class CentralSSCStore {
       name: student.name,
       studentClass: student.class,
       class: student.class,
-      school: student.school || student.roll_no || student.rollNo || 'Regular Batch',
-      rollNo: student.school || student.roll_no || student.rollNo || 'Regular Batch',
-      parentName: student.parentName,
-      phone: student.phone,
+      school: student.school || '',
+      rollNo: student.rollNo || `SSC-${student.id}`,
+      parentName: student.parentName || student.fatherName || '',
+      phone: student.phone || '',
       year,
       month,
       monthlyFee,
+      regularMonthlyFee,
       dueDay,
       dueDate: dueDateDisplay,
       dueDateDisplay,
       paidAmount,
       balance,
-      status, // 'Full Paid' | 'Half Paid' | 'Pending'
+      status, // 'Full Paid' | 'Half Paid' | 'Pending' | 'Discontinued'
       paidDate: paidDateDisplay,
       paidDateDisplay,
+      isDiscontinued: false,
       payments: monthPayments,
+      transactions: monthPayments,
       latestReceiptNo: latestPayment ? latestPayment.receiptNo : null
     };
   }
 
   /**
-   * Returns complete month fee data for all active eligible students
+   * Returns complete month fee data for all registered students
    */
   getMonthLedger(year = 2026, month = 1) {
-    const activeStudents = this.getStudents().filter(s => s.status === 'active');
-    const records = [];
+    const allStudents = this.getStudents();
+    let records = [];
 
-    activeStudents.forEach(s => {
+    allStudents.forEach(s => {
       const feeData = this.getStudentMonthFee(s.id, year, month);
       if (feeData) {
         records.push(feeData);
@@ -701,7 +1874,7 @@ class CentralSSCStore {
     });
 
     // Sort alphabetically by student name
-    records.sort((a, b) => a.studentName.localeCompare(b.studentName));
+    records = sortStudentList(records, "class-asc");
 
     // Summary calculations
     let expectedTotal = 0;
@@ -709,13 +1882,18 @@ class CentralSSCStore {
     let fullPaidCount = 0;
     let halfPaidCount = 0;
     let pendingCount = 0;
+    let discontinuedCount = 0;
 
     records.forEach(r => {
-      expectedTotal += r.monthlyFee;
-      collectedTotal += r.paidAmount;
-      if (r.status === 'Full Paid') fullPaidCount++;
-      else if (r.status === 'Half Paid') halfPaidCount++;
-      else pendingCount++;
+      if (r.status === 'Discontinued' || r.isDiscontinued) {
+        discontinuedCount++;
+      } else {
+        expectedTotal += r.monthlyFee;
+        collectedTotal += r.paidAmount;
+        if (r.status === 'Full Paid') fullPaidCount++;
+        else if (r.status === 'Half Paid') halfPaidCount++;
+        else pendingCount++;
+      }
     });
 
     const pendingBalanceTotal = Math.max(0, expectedTotal - collectedTotal);
@@ -744,16 +1922,13 @@ class CentralSSCStore {
         pendingFee: pendingBalanceTotal,
         fullPaidCount,
         halfPaidCount,
-        pendingCount
+        pendingCount,
+        discontinuedCount
       }
     };
   }
 
-  /**
-   * Records a full or partial fee payment for a student for (year, month).
-   * Supports installment payments (e.g. paying 125, then 125 later).
-   */
-  recordFeePayment(studentId, year, month, amount, date = null, mode = 'UPI', notes = '') {
+    recordFeePayment(studentId, year, month, amount, date = null, mode = 'UPI', notes = '') {
     const student = this.getStudentById(studentId);
     if (!student) throw new Error('Student not found.');
 
@@ -984,7 +2159,9 @@ class CentralSSCStore {
     if (!c) return { success: false, message: 'Class not found.' };
 
     // Safeguard: Check if students are enrolled in this class
-    const students = this.getStudents().filter(s => s.status === 'active');
+    const allStudents = this.getStudents();
+    const students = allStudents.filter(s => s.status !== 'discontinued' && s.status !== 'inactive');
+    const discontinuedStudents = allStudents.filter(s => s.status === 'discontinued' || s.status === 'inactive');
     const enrolledStudents = students.filter(s => s.class === c.gradeCode || s.class === c.name);
 
     if (enrolledStudents.length > 0) {
@@ -1488,7 +2665,9 @@ class CentralSSCStore {
   // 9. OVERVIEW SUMMARY METRICS
   // ========================================================================
   getOverviewMetrics() {
-    const students = this.getStudents().filter(s => s.status === 'active');
+    const allStudents = this.getStudents();
+    const students = allStudents.filter(s => s.status !== 'discontinued' && s.status !== 'inactive');
+    const discontinuedStudents = allStudents.filter(s => s.status === 'discontinued' || s.status === 'inactive');
     const enrollments = this.getEnrollments();
     const pendingEnrollments = enrollments.filter(e => e.status === 'pending');
     const books = this.getBooks();
@@ -1497,13 +2676,19 @@ class CentralSSCStore {
     // Total collections across all payments in fee history
     let totalRevenue = 0;
     students.forEach(s => {
-      (s.feeHistory || []).forEach(p => {
-        totalRevenue += Number(p.amount || 0);
-      });
+      if (s.feeHistory && s.feeHistory.length > 0) {
+        s.feeHistory.forEach(p => {
+          totalRevenue += Number(p.amount || 0);
+        });
+      } else if (s.paymentStatus === 'Paid' && s.advanceAmount > 0) {
+        totalRevenue += Number(s.advanceAmount);
+      }
     });
 
     return {
       activeStudentsCount: students.length,
+      discontinuedStudentsCount: discontinuedStudents.length,
+      totalRegisteredStudents: allStudents.length,
       activeStudents: students.length,
       pendingEnrollmentsCount: pendingEnrollments.length,
       pendingEnrollments: pendingEnrollments.length,

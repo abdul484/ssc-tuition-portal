@@ -47,6 +47,9 @@ function openAddStudentModal() {
   const advInput = document.getElementById('asm-advance');
   if (advInput) advInput.value = 0;
 
+  const statusInput = document.getElementById('asm-status');
+  if (statusInput) statusInput.value = 'active';
+
   modal.classList.remove('hidden');
   modal.classList.add('flex');
 }
@@ -77,6 +80,11 @@ function openEditStudentModal(id) {
   document.getElementById('asm-advance').value = student.advanceAmount || 0;
   document.getElementById('asm-notes').value = student.notes || '';
 
+  const statusInput = document.getElementById('asm-status');
+  if (statusInput) {
+    statusInput.value = (student.status === 'discontinued' || student.status === 'inactive') ? 'discontinued' : 'active';
+  }
+
   modal.classList.remove('hidden');
   modal.classList.add('flex');
 }
@@ -100,6 +108,7 @@ function handleSaveStudentForm(e) {
   const monthlyFee = Number(document.getElementById('asm-fee').value);
   const advanceAmount = Number(document.getElementById('asm-advance').value || 0);
   const notes = document.getElementById('asm-notes').value.trim();
+  const status = document.getElementById('asm-status')?.value || 'active';
 
   // Strict 10-digit mobile validation: must start with 6, 7, 8, or 9
   const cleanPhone = rawPhone.replace(/\D/g, '');
@@ -121,7 +130,8 @@ function handleSaveStudentForm(e) {
         joiningDate,
         monthlyFee,
         advanceAmount,
-        notes
+        notes,
+        status
       });
       showGlobalToast(`Student "${name}" updated successfully.`, true);
     } else {
@@ -135,7 +145,8 @@ function handleSaveStudentForm(e) {
         joiningDate,
         monthlyFee,
         advanceAmount,
-        notes
+        notes,
+        status
       });
       showGlobalToast(`Student "${name}" enrolled successfully.`, true);
     }
@@ -163,6 +174,127 @@ function confirmDeleteStudentPrompt(id, name) {
 }
 
 // ==========================================================================
+// ==========================================================================
+// PAYMENT MODAL MONTH & YEAR HELPERS (Dynamic years, Custom year typing/selection)
+// ==========================================================================
+function populateApmYearSelect(selectedYear) {
+  const yearSelect = document.getElementById('apm-year-select');
+  if (!yearSelect) return;
+
+  const getYearsFn = window.getAvailableLedgerYears || function() {
+    const arr = [];
+    for (let y = 2025; y <= 2035; y++) arr.push(y);
+    return arr;
+  };
+
+  const availableYears = getYearsFn();
+  const targetYear = Number(selectedYear || activePaymentTarget.year || 2026);
+  if (!availableYears.includes(targetYear) && targetYear >= 2000 && targetYear <= 2100) {
+    availableYears.push(targetYear);
+    availableYears.sort((a, b) => a - b);
+  }
+
+  yearSelect.innerHTML = availableYears.map(y => `
+    <option value="${y}" ${targetYear === y ? 'selected' : ''}>${y}</option>
+  `).join('') + `
+    <option value="__custom__" class="font-bold text-emerald-700 bg-emerald-50">+ Custom Year...</option>
+  `;
+  yearSelect.value = String(targetYear);
+}
+window.populateApmYearSelect = populateApmYearSelect;
+
+window.handleApmMonthYearChange = function() {
+  const monthSelect = document.getElementById('apm-month-select');
+  const yearSelect = document.getElementById('apm-year-select');
+  const monthInput = document.getElementById('apm-month');
+
+  if (!monthSelect || !yearSelect) return;
+
+  if (yearSelect.value === '__custom__') {
+    promptApmCustomYear();
+    return;
+  }
+
+  const newMonth = Number(monthSelect.value);
+  const newYear = Number(yearSelect.value);
+
+  activePaymentTarget.month = newMonth;
+  activePaymentTarget.year = newYear;
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  if (monthInput) {
+    monthInput.value = `${monthNames[newMonth - 1]} ${newYear}`;
+  }
+
+  updatePaymentModalDetails();
+};
+
+window.promptApmCustomYear = function() {
+  const current = activePaymentTarget.year || window.currentLedgerYear || 2026;
+  const input = prompt('Enter a 4-digit custom year for payment (e.g. 2036, 2040):', String(current + 1));
+  const yearSelect = document.getElementById('apm-year-select');
+  if (input === null) {
+    if (yearSelect) yearSelect.value = String(activePaymentTarget.year);
+    return;
+  }
+
+  const clean = input.trim();
+  const yearNum = parseInt(clean, 10);
+  if (!/^\d{4}$/.test(clean) || isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
+    alert('Please enter a valid 4-digit year between 2000 and 2100 (e.g. 2036).');
+    if (yearSelect) yearSelect.value = String(activePaymentTarget.year);
+    return;
+  }
+
+  if (typeof window.saveCustomLedgerYear === 'function') {
+    window.saveCustomLedgerYear(yearNum);
+  }
+
+  activePaymentTarget.year = yearNum;
+  populateApmYearSelect(yearNum);
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthInput = document.getElementById('apm-month');
+  if (monthInput) {
+    monthInput.value = `${monthNames[activePaymentTarget.month - 1]} ${yearNum}`;
+  }
+
+  updatePaymentModalDetails();
+  showGlobalToast(`Payment year updated to ${yearNum}.`, true);
+};
+
+window.handleApmMonthTextInput = function(val) {
+  if (!val) return;
+  const clean = val.trim();
+
+  // Try finding a 4-digit year like 2036
+  const yearMatch = clean.match(/\b(20\d{2})\b/);
+  if (yearMatch) {
+    const parsedYear = Number(yearMatch[1]);
+    if (parsedYear >= 2000 && parsedYear <= 2100) {
+      if (typeof window.saveCustomLedgerYear === 'function') {
+        window.saveCustomLedgerYear(parsedYear);
+      }
+      activePaymentTarget.year = parsedYear;
+      populateApmYearSelect(parsedYear);
+    }
+  }
+
+  // Try finding month name
+  const monthNamesLower = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+  const monthSelect = document.getElementById('apm-month-select');
+  for (let i = 0; i < monthNamesLower.length; i++) {
+    if (clean.toLowerCase().includes(monthNamesLower[i]) || clean.toLowerCase().includes(monthNamesLower[i].substring(0, 3))) {
+      activePaymentTarget.month = i + 1;
+      if (monthSelect) monthSelect.value = String(i + 1);
+      break;
+    }
+  }
+
+  updatePaymentModalDetails();
+};
+
+
 // 3. MONTH-WISE FEE PAYMENT MODAL (Supports Full & Half/Partial Payments)
 // ==========================================================================
 function openRecordPaymentModal(preselectedStudentId = null, year = 2026, month = null, customAmount = null) {
@@ -193,6 +325,11 @@ function openRecordPaymentModal(preselectedStudentId = null, year = 2026, month 
   // Set Month and Year dropdowns / labels
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const monthName = monthNames[currentMonth - 1];
+
+  const monthSelect = document.getElementById('apm-month-select');
+  if (monthSelect) monthSelect.value = String(currentMonth);
+
+  populateApmYearSelect(currentYear);
 
   const monthInput = document.getElementById('apm-month');
   if (monthInput) monthInput.value = `${monthName} ${currentYear}`;
@@ -254,6 +391,19 @@ function handleSavePaymentForm(e) {
   const date = document.getElementById('apm-date').value;
   const mode = document.getElementById('apm-mode').value;
   const notes = document.getElementById('apm-notes')?.value || '';
+
+  const yearSelect = document.getElementById('apm-year-select');
+  const monthSelect = document.getElementById('apm-month-select');
+  if (yearSelect && !isNaN(Number(yearSelect.value)) && yearSelect.value !== '__custom__') {
+    activePaymentTarget.year = Number(yearSelect.value);
+  }
+  if (monthSelect && !isNaN(Number(monthSelect.value))) {
+    activePaymentTarget.month = Number(monthSelect.value);
+  }
+
+  if (typeof window.saveCustomLedgerYear === 'function' && activePaymentTarget.year) {
+    window.saveCustomLedgerYear(activePaymentTarget.year);
+  }
 
   if (isNaN(amount) || amount <= 0) {
     showGlobalToast('Please enter a valid payment amount.', false);

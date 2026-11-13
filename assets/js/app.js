@@ -896,6 +896,7 @@ const STUDENTS_PER_PAGE = 20; // Ensure all 12 enrolled students are visible wit
 let studentSearchQuery = '';
 let studentSelectedClass = 'all';
 let studentSelectedStatus = 'all';
+let studentSortOrder = 'class-asc';
 
 // Click-to-Filter for Top Class Summary Cards (Total + LKG through 10th)
 window.filterByClassCard = function(className) {
@@ -946,6 +947,19 @@ function initStudentsSection() {
       }
     };
   });
+
+  // Sort order dropdown listener
+  const sortSelect = document.getElementById('student-sort-select');
+  if (sortSelect) {
+    sortSelect.value = studentSortOrder;
+    sortSelect.addEventListener('change', (e) => {
+      studentSortOrder = e.target.value;
+      studentCurrentPage = 1;
+      updatePublicClassSortHeaderIcon();
+      renderStudentsTable();
+    });
+  }
+  updatePublicClassSortHeaderIcon();
 
   // Search input listener
   const searchInput = document.getElementById('student-search-input');
@@ -1027,6 +1041,24 @@ function updateMetricsDisplay() {
   });
 }
 
+
+window.togglePublicClassSort = function() {
+  studentSortOrder = (studentSortOrder === 'class-asc') ? 'class-desc' : 'class-asc';
+  const sortSelect = document.getElementById('student-sort-select');
+  if (sortSelect) sortSelect.value = studentSortOrder;
+  updatePublicClassSortHeaderIcon();
+  studentCurrentPage = 1;
+  renderStudentsTable();
+};
+
+function updatePublicClassSortHeaderIcon() {
+  const icon = document.getElementById('public-class-sort-icon');
+  if (!icon) return;
+  if (studentSortOrder === 'class-asc') icon.textContent = '▲';
+  else if (studentSortOrder === 'class-desc') icon.textContent = '▼';
+  else icon.textContent = '↕';
+}
+
 function getFilteredStudents() {
   const store = window.SSCStore || window.StudentsStore;
   if (!store) return [];
@@ -1036,7 +1068,7 @@ function getFilteredStudents() {
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1; // 1 to 12
 
-  return all.filter(s => {
+  const filtered = all.filter(s => {
     const matchesSearch = !studentSearchQuery ||
       s.name.toLowerCase().includes(studentSearchQuery) ||
       (s.phone && s.phone.replace(/\s+/g, '').includes(studentSearchQuery.replace(/\s+/g, ''))) ||
@@ -1079,12 +1111,15 @@ function getFilteredStudents() {
       } else if (studentSelectedStatus === 'unpaid' || studentSelectedStatus === 'due') {
         matchesStatus = feeStatus === 'unpaid' || feeStatus === 'half-paid';
       } else if (studentSelectedStatus === 'active') {
-        matchesStatus = s.status === 'active';
+        matchesStatus = s.status !== 'inactive' && s.status !== 'discontinued';
       }
     }
 
     return matchesSearch && matchesClass && matchesStatus;
   });
+
+  const sortFn = window.sortStudentList || function(list) { return list; };
+  return sortFn(filtered, studentSortOrder);
 }
 
 function renderStudentsTable() {
@@ -1151,21 +1186,27 @@ function renderStudentsTable() {
 
     // Calculate Dynamic Current Month Status
     let currentMonthBadge = '';
-    let feeData = null;
-    if (window.SSCStore && typeof window.SSCStore.getStudentMonthFee === 'function') {
-      feeData = window.SSCStore.getStudentMonthFee(student.id, currentYear, currentMonth);
-    }
+    const isDisc = student.status === 'discontinued' || student.status === 'inactive';
 
-    if (feeData) {
-      if (feeData.status === 'Full Paid') {
-        currentMonthBadge = `<span class="badge-3d-paid inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>Paid</span>`;
-      } else if (feeData.status === 'Half Paid') {
-        currentMonthBadge = `<span class="badge-3d-half inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>Half Paid</span>`;
+    if (isDisc) {
+      currentMonthBadge = `<span class="badge-3d-inset inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-stone-100 text-stone-600 border border-stone-200"><span class="w-1.5 h-1.5 rounded-full bg-stone-400"></span>Discontinued</span>`;
+    } else {
+      let feeData = null;
+      if (window.SSCStore && typeof window.SSCStore.getStudentMonthFee === 'function') {
+        feeData = window.SSCStore.getStudentMonthFee(student.id, currentYear, currentMonth);
+      }
+
+      if (feeData) {
+        if (feeData.status === 'Full Paid') {
+          currentMonthBadge = `<span class="badge-3d-paid inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>Paid</span>`;
+        } else if (feeData.status === 'Half Paid') {
+          currentMonthBadge = `<span class="badge-3d-half inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>Half Paid</span>`;
+        } else {
+          currentMonthBadge = `<span class="badge-3d-unpaid inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>Unpaid</span>`;
+        }
       } else {
         currentMonthBadge = `<span class="badge-3d-unpaid inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>Unpaid</span>`;
       }
-    } else {
-      currentMonthBadge = `<span class="badge-3d-unpaid inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>Unpaid</span>`;
     }
 
     const formattedJoiningDate = (window.formatISODateDisplay && typeof window.formatISODateDisplay === 'function')

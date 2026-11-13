@@ -17,8 +17,97 @@ let currentAdminTab = 'overview';
 window.currentLedgerYear = 2026;
 window.currentLedgerMonth = new Date().getMonth() + 1; // 1 to 12
 
+// ==========================================================================
+// DYNAMIC YEAR & CUSTOM YEAR MANAGEMENT FOR FEE LEDGER
+// ==========================================================================
+function getAvailableLedgerYears() {
+  const currentSysYear = new Date().getFullYear();
+  const maxEndYear = Math.max(2035, currentSysYear + 5);
+  const yearsSet = new Set();
+  
+  for (let y = 2025; y <= maxEndYear; y++) {
+    yearsSet.add(y);
+  }
+
+  try {
+    const saved = localStorage.getItem('ssc_custom_ledger_years');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(y => {
+          const num = Number(y);
+          if (!isNaN(num) && num >= 2000 && num <= 2100) {
+            yearsSet.add(num);
+          }
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading custom ledger years from localStorage:', e);
+  }
+
+  if (window.currentLedgerYear && !isNaN(Number(window.currentLedgerYear))) {
+    const num = Number(window.currentLedgerYear);
+    if (num >= 2000 && num <= 2100) {
+      yearsSet.add(num);
+    }
+  }
+
+  return Array.from(yearsSet).sort((a, b) => a - b);
+}
+window.getAvailableLedgerYears = getAvailableLedgerYears;
+
+function saveCustomLedgerYear(yearNum) {
+  const num = Number(yearNum);
+  if (isNaN(num) || num < 2000 || num > 2100) return;
+  try {
+    let customYears = [];
+    const saved = localStorage.getItem('ssc_custom_ledger_years');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) customYears = parsed;
+    }
+    if (!customYears.includes(num)) {
+      customYears.push(num);
+      customYears.sort((a, b) => a - b);
+      localStorage.setItem('ssc_custom_ledger_years', JSON.stringify(customYears));
+    }
+  } catch (e) {
+    console.warn('Error saving custom ledger year:', e);
+  }
+}
+window.saveCustomLedgerYear = saveCustomLedgerYear;
+
+function promptCustomLedgerYear() {
+  const current = window.currentLedgerYear || 2026;
+  const input = prompt('Enter a 4-digit custom year (e.g. 2036, 2040):', String(current + 1));
+  const select = document.getElementById('admin-ledger-year-select');
+  if (input === null) {
+    if (select) select.value = String(window.currentLedgerYear || 2026);
+    return;
+  }
+  const clean = input.trim();
+  const yearNum = parseInt(clean, 10);
+  if (!/^\d{4}$/.test(clean) || isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
+    alert('Please enter a valid 4-digit year between 2000 and 2100 (e.g. 2036).');
+    if (select) select.value = String(window.currentLedgerYear || 2026);
+    return;
+  }
+
+  saveCustomLedgerYear(yearNum);
+  window.currentLedgerYear = yearNum;
+  const container = document.getElementById('admin-tab-content-area');
+  if (container) renderFeesManagementTab(container);
+  showGlobalToast(`Fee Ledger updated to year ${yearNum}.`, true);
+}
+window.promptCustomLedgerYear = promptCustomLedgerYear;
+
 let adminStudentSearch = '';
 let adminStudentClassFilter = 'all';
+let adminStudentStatusFilter = 'all';
+let adminStudentSort = 'class-asc';
+let adminLedgerSort = 'class-asc';
+let adminLedgerStatusFilter = 'all';
 let adminEnrollmentFilter = 'all';
 
 function showGlobalToast(msg, isSuccess = true) {
@@ -431,13 +520,20 @@ function renderStudentsManagementTab(container) {
   const allStudents = window.SSCStore ? window.SSCStore.getStudents() : [];
   const classCounts = window.SSCStore ? window.SSCStore.getClassStudentCounts() : {};
 
+  const continuingCount = allStudents.filter(s => s.status !== 'discontinued' && s.status !== 'inactive').length;
+  const discontinuedCount = allStudents.filter(s => s.status === 'discontinued' || s.status === 'inactive').length;
+
   const filtered = allStudents.filter(s => {
     const matchSearch = !adminStudentSearch ||
       s.name.toLowerCase().includes(adminStudentSearch) ||
       (s.phone && s.phone.includes(adminStudentSearch)) ||
       (s.school && s.school.toLowerCase().includes(adminStudentSearch));
     const matchClass = adminStudentClassFilter === 'all' || s.class === adminStudentClassFilter;
-    return matchSearch && matchClass;
+    const isDisc = s.status === 'discontinued' || s.status === 'inactive';
+    const matchStatus = adminStudentStatusFilter === 'all' ||
+      (adminStudentStatusFilter === 'continuing' && !isDisc) ||
+      (adminStudentStatusFilter === 'discontinued' && isDisc);
+    return matchSearch && matchClass && matchStatus;
   });
 
   const classList = ['Total', 'LKG', 'UKG', '1st Class', '2nd Class', '3rd Class', '4th Class', '5th Class', '6th Class', '7th Class', '8th Class', '9th Class', '10th Class'];
@@ -448,7 +544,7 @@ function renderStudentsManagementTab(container) {
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 class="font-serif text-2xl font-bold text-brand-dark">Student Directory & Profiles</h3>
-          <p class="text-xs text-brand-muted">Managing ${allStudents.length} registered students from LKG to Class 10.</p>
+          <p class="text-xs text-brand-muted">Managing ${allStudents.length} registered students (${continuingCount} Continuing, ${discontinuedCount} Discontinued).</p>
         </div>
         <button onclick="openAddStudentModal()" class="px-5 py-2.5 rounded-xl bg-brand-dark hover:bg-black text-white text-xs font-bold shadow-sm transition flex items-center gap-2 self-start">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
@@ -475,22 +571,39 @@ function renderStudentsManagementTab(container) {
         }).join('')}
       </div>
 
-      <!-- Filters Bar -->
+      <!-- Filters Bar (Search, Class, Status, and Sort Order) -->
       <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-white p-4 rounded-2xl border border-[#ECE2D2] shadow-xs">
-        <div class="sm:col-span-8 relative">
+        <div class="sm:col-span-4 relative">
           <input type="text" id="admin-student-search-input" value="${adminStudentSearch}"
                  placeholder="Search student by name, phone number, or school..."
                  class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#DED4C7] bg-[#FAF8F5] text-xs text-brand-dark focus:bg-white"
                  oninput="handleAdminStudentSearch(this.value)">
           <svg class="w-4 h-4 text-brand-muted absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
         </div>
-        <div class="sm:col-span-4">
+        <div class="sm:col-span-3">
           <select class="w-full px-3 py-2.5 rounded-xl border border-[#DED4C7] bg-[#FAF8F5] text-xs text-brand-dark font-medium cursor-pointer"
                   onchange="handleAdminStudentClassFilter(this.value)">
             <option value="all" ${adminStudentClassFilter === 'all' ? 'selected' : ''}>All Classes (LKG - 10th)</option>
             ${['LKG', 'UKG', '1st Class', '2nd Class', '3rd Class', '4th Class', '5th Class', '6th Class', '7th Class', '8th Class', '9th Class', '10th Class'].map(c => `
               <option value="${c}" ${adminStudentClassFilter === c ? 'selected' : ''}>${c}</option>
             `).join('')}
+          </select>
+        </div>
+        <div class="sm:col-span-2">
+          <select class="w-full px-3 py-2.5 rounded-xl border border-[#DED4C7] bg-[#FAF8F5] text-xs text-brand-dark font-medium cursor-pointer"
+                  onchange="handleAdminStudentStatusFilter(this.value)">
+            <option value="all" ${adminStudentStatusFilter === 'all' ? 'selected' : ''}>All Status (${allStudents.length})</option>
+            <option value="continuing" ${adminStudentStatusFilter === 'continuing' ? 'selected' : ''}>Continuing (${continuingCount})</option>
+            <option value="discontinued" ${adminStudentStatusFilter === 'discontinued' ? 'selected' : ''}>Discontinued (${discontinuedCount})</option>
+          </select>
+        </div>
+        <div class="sm:col-span-3">
+          <select class="w-full px-3 py-2.5 rounded-xl border border-[#DED4C7] bg-[#FAF8F5] text-xs text-brand-dark font-medium cursor-pointer"
+                  onchange="handleAdminStudentSortChange(this.value)">
+            <option value="class-asc" ${adminStudentSort === 'class-asc' ? 'selected' : ''}>Class: Lower to Higher (LKG → 10th)</option>
+            <option value="class-desc" ${adminStudentSort === 'class-desc' ? 'selected' : ''}>Class: Higher to Lower (10th → LKG)</option>
+            <option value="name-asc" ${adminStudentSort === 'name-asc' ? 'selected' : ''}>Name: A → Z</option>
+            <option value="roll-asc" ${adminStudentSort === 'roll-asc' ? 'selected' : ''}>Roll No: Ascending</option>
           </select>
         </div>
       </div>
@@ -503,40 +616,68 @@ function renderStudentsManagementTab(container) {
               <tr>
                 <th class="py-3 px-4">Roll / ID</th>
                 <th class="py-3 px-4">Student Name</th>
-                <th class="py-3 px-4">Class</th>
+                <th class="py-3 px-4 cursor-pointer select-none hover:text-brand-dark transition" onclick="toggleAdminStudentClassSort()" title="Click to sort by Class (LKG → 10th / 10th → LKG)">
+                  Class <span class="text-[10px]">${adminStudentSort === 'class-desc' ? '▼' : adminStudentSort === 'class-asc' ? '▲' : '↕'}</span>
+                </th>
+                <th class="py-3 px-4">Status</th>
                 <th class="py-3 px-4">Parent & Contact</th>
                 <th class="py-3 px-4">School</th>
                 <th class="py-3 px-4">Joining Date</th>
                 <th class="py-3 px-4">Monthly Fee</th>
-                <th class="py-3 px-4">Current Month Status</th>
+                <th class="py-3 px-4">Current Month Fee</th>
                 <th class="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#F4ECE1]">
-              ${filtered.length === 0 ? `
-                <tr><td colspan="9" class="text-center py-8 text-brand-muted">No student records found matching filter.</td></tr>
-              ` : filtered.map(s => {
-                const monthFee = window.SSCStore.getStudentMonthFee(s.id, window.currentLedgerYear, window.currentLedgerMonth);
-                const statusBadge = !monthFee ? `<span class="badge-3d-capsule bg-stone-100 text-stone-600 text-[10px]">Upcoming</span>` :
-                  monthFee.status === 'Full Paid'
-                    ? `<span class="badge-3d-capsule badge-3d-paid text-[10px]">🟢 Full Paid</span>`
-                    : monthFee.status === 'Half Paid'
-                    ? `<span class="badge-3d-capsule badge-3d-half text-[10px]">🟠 Half Paid (Due: ₹${monthFee.balance})</span>`
-                    : `<span class="badge-3d-capsule badge-3d-unpaid text-[10px]">🔴 Pending (₹${monthFee.balance})</span>`;
+              ${(() => {
+                const sortFn = window.sortStudentList || function(l) { return l; };
+                const sorted = sortFn(filtered, adminStudentSort);
+                return sorted.length === 0 ? `
+                  <tr><td colspan="10" class="text-center py-8 text-brand-muted">No student records found matching filter.</td></tr>
+                ` : sorted.map(s => {
+                const isDisc = s.status === 'discontinued' || s.status === 'inactive';
+                const monthFee = window.SSCStore.getStudentMonthFee(s.id, window.currentLedgerYear || 2026, window.currentLedgerMonth || (new Date().getMonth() + 1));
+                
+                const statusBadge = isDisc
+                  ? `<span class="badge-3d-capsule bg-stone-100 text-stone-600 border border-stone-300 text-[10px]">Discontinued (No Dues)</span>`
+                  : !monthFee
+                  ? `<span class="badge-3d-capsule bg-stone-100 text-stone-600 text-[10px]">Upcoming</span>`
+                  : monthFee.status === 'Full Paid'
+                  ? `<span class="badge-3d-capsule badge-3d-paid text-[10px]">✓ Full Paid</span>`
+                  : monthFee.status === 'Half Paid'
+                  ? `<span class="badge-3d-capsule badge-3d-half text-[10px]">◑ Half Paid (Due: ₹${monthFee.balance})</span>`
+                  : `<span class="badge-3d-capsule badge-3d-unpaid text-[10px]">⏳ Pending (Due: ₹${monthFee.balance})</span>`;
 
                 return `
-                  <tr class="row-float-3d hover:bg-[#FAF7F2] transition">
+                  <tr class="row-float-3d hover:bg-[#FAF7F2] transition ${isDisc ? 'opacity-75 bg-stone-50/60' : ''}">
                     <td class="py-3.5 px-4 font-mono text-[11px] font-bold text-brand-muted">${s.rollNo || 'SSC-' + s.id}</td>
                     <td class="py-3.5 px-4 font-bold text-brand-dark">${s.name}</td>
                     <td class="py-3.5 px-4"><span class="badge-3d-inset text-[10px] font-bold px-2 py-0.5 rounded text-brand-dark">${s.class}</span></td>
+                    <td class="py-3.5 px-4">
+                      ${isDisc ? `
+                        <button onclick="toggleAdminStudentStatus(${s.id})"
+                                title="Click to mark as Continuing"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 transition cursor-pointer">
+                          <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                          Discontinued
+                        </button>
+                      ` : `
+                        <button onclick="toggleAdminStudentStatus(${s.id})"
+                                title="Click to mark as Discontinued"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition cursor-pointer">
+                          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          Continuing
+                        </button>
+                      `}
+                    </td>
                     <td class="py-3.5 px-4 text-brand-dark">${s.parentName || s.fatherName || 'Parent'}<br><span class="text-brand-muted font-mono text-[11px]">${s.phone}</span></td>
                     <td class="py-3.5 px-4 text-brand-muted max-w-[150px] truncate">${s.school || '—'}</td>
                     <td class="py-3.5 px-4 font-mono text-brand-muted">${s.joiningDate || '—'}</td>
-                    <td class="py-3.5 px-4 font-semibold text-brand-dark">₹${s.monthlyFee}</td>
+                    <td class="py-3.5 px-4 font-semibold text-brand-dark">${isDisc ? '—' : '₹' + s.monthlyFee}</td>
                     <td class="py-3.5 px-4">${statusBadge}</td>
                     <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
                       <button onclick="openStudentModal(${s.id})" title="Fee History" class="btn-3d-tactile-sm p-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-brand-dark">
-                        👁️
+                        📋
                       </button>
                       <button onclick="openEditStudentModal(${s.id})" title="Edit Details" class="btn-3d-tactile-sm p-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900">
                         ✏️
@@ -547,7 +688,8 @@ function renderStudentsManagementTab(container) {
                     </td>
                   </tr>
                 `;
-              }).join('')}
+              }).join('');
+              })()}
             </tbody>
           </table>
         </div>
@@ -568,12 +710,21 @@ function handleAdminStudentClassFilter(val) {
   if (container) renderStudentsManagementTab(container);
 }
 
+function handleAdminStudentStatusFilter(val) {
+  adminStudentStatusFilter = val;
+  const container = document.getElementById('admin-tab-content-area');
+  if (container) renderStudentsManagementTab(container);
+}
+
+window.handleAdminStudentStatusFilter = handleAdminStudentStatusFilter;
+
 // ==========================================================================
 // 3. MONTH-WISE FEE LEDGER TAB (Jan to Dec Tabs, Auto Due Dates, Receipts)
 // ==========================================================================
 function renderFeesManagementTab(container) {
   const year = window.currentLedgerYear || 2026;
   const month = window.currentLedgerMonth || (new Date().getMonth() + 1);
+  const availableYears = getAvailableLedgerYears();
 
   const monthNames = [
     { num: 1, short: 'Jan', full: 'January' },
@@ -591,7 +742,7 @@ function renderFeesManagementTab(container) {
   ];
 
   const ledgerData = window.SSCStore ? window.SSCStore.getMonthLedger(year, month) : {
-    summary: { totalStudents: 0, expectedFee: 0, collectedFee: 0, pendingFee: 0, fullPaidCount: 0, halfPaidCount: 0, pendingCount: 0 },
+    summary: { totalStudents: 0, expectedFee: 0, collectedFee: 0, pendingFee: 0, fullPaidCount: 0, halfPaidCount: 0, pendingCount: 0, discontinuedCount: 0 },
     rows: []
   };
 
@@ -599,24 +750,58 @@ function renderFeesManagementTab(container) {
   const currentMonthName = monthNames[month - 1].full;
   const collectionRate = summary.expectedFee > 0 ? Math.round((summary.collectedFee / summary.expectedFee) * 100) : 0;
 
+  // Filter rows by ledger status filter
+  const displayRows = rows.filter(r => {
+    const isDisc = r.status === 'Discontinued' || r.isDiscontinued;
+    if (adminLedgerStatusFilter === 'continuing') return !isDisc;
+    if (adminLedgerStatusFilter === 'discontinued') return isDisc;
+    return true;
+  });
+
+  const continuingCount = rows.filter(r => r.status !== 'Discontinued' && !r.isDiscontinued).length;
+  const discontinuedCount = rows.filter(r => r.status === 'Discontinued' || r.isDiscontinued).length;
+
   container.innerHTML = `
     <div class="space-y-6">
-      <!-- Title & Year Switcher Row -->
+      <!-- Title & Year / Status Switcher Row -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 class="font-serif text-2xl font-bold text-brand-dark">Month-Wise Tuition Fee Ledger</h3>
-          <p class="text-xs text-brand-muted">Automated due date derivation, partial payment accumulation, and instant WhatsApp receipts.</p>
+          <p class="text-xs text-brand-muted">Automated due dates, manual payment tracking, and Continue/Discontinue student status controls.</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
+          <!-- Status Filter -->
+          <div class="flex items-center gap-1.5 bg-white border border-[#DED4C7] rounded-xl px-3 py-1.5">
+            <span class="text-xs font-semibold text-brand-muted">Status:</span>
+            <select onchange="changeLedgerStatusFilter(this.value)" class="text-xs font-bold text-brand-dark bg-transparent outline-none cursor-pointer">
+              <option value="all" ${adminLedgerStatusFilter === 'all' ? 'selected' : ''}>All (${rows.length})</option>
+              <option value="continuing" ${adminLedgerStatusFilter === 'continuing' ? 'selected' : ''}>Continuing (${continuingCount})</option>
+              <option value="discontinued" ${adminLedgerStatusFilter === 'discontinued' ? 'selected' : ''}>Discontinued (${discontinuedCount})</option>
+            </select>
+          </div>
+
+          <!-- Sort Order -->
+          <div class="flex items-center gap-1.5 bg-white border border-[#DED4C7] rounded-xl px-3 py-1.5">
+            <span class="text-xs font-semibold text-brand-muted">Sort:</span>
+            <select onchange="changeLedgerSort(this.value)" class="text-xs font-bold text-brand-dark bg-transparent outline-none cursor-pointer">
+              <option value="class-asc" ${adminLedgerSort === 'class-asc' ? 'selected' : ''}>Class: Lower to Higher (LKG → 10th)</option>
+              <option value="class-desc" ${adminLedgerSort === 'class-desc' ? 'selected' : ''}>Class: Higher to Lower (10th → LKG)</option>
+              <option value="name-asc" ${adminLedgerSort === 'name-asc' ? 'selected' : ''}>Name: A → Z</option>
+              <option value="roll-asc" ${adminLedgerSort === 'roll-asc' ? 'selected' : ''}>Roll No: Ascending</option>
+            </select>
+          </div>
+
           <!-- Year Selector -->
           <div class="flex items-center gap-1.5 bg-white border border-[#DED4C7] rounded-xl px-3 py-1.5">
             <span class="text-xs font-semibold text-brand-muted">Year:</span>
-            <select onchange="changeLedgerYear(this.value)" class="text-xs font-bold text-brand-dark bg-transparent outline-none cursor-pointer">
-              <option value="2025" ${year === 2025 ? 'selected' : ''}>2025</option>
-              <option value="2026" ${year === 2026 ? 'selected' : ''}>2026</option>
-              <option value="2027" ${year === 2027 ? 'selected' : ''}>2027</option>
+            <select id="admin-ledger-year-select" onchange="changeLedgerYear(this.value)" class="text-xs font-bold text-brand-dark bg-transparent outline-none cursor-pointer">
+              ${availableYears.map(y => `
+                <option value="${y}" ${year === y ? 'selected' : ''}>${y}</option>
+              `).join('')}
+              <option value="__custom__" class="font-bold text-emerald-700 bg-emerald-50">+ Custom Year...</option>
             </select>
           </div>
+
           <button onclick="openRecordPaymentModal(null, ${year}, ${month})" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5">
             <span>+ Record Fee Payment</span>
           </button>
@@ -646,17 +831,17 @@ function renderFeesManagementTab(container) {
              style="padding: 22px 26px !important; box-sizing: border-box !important; min-height: 125px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; gap: 8px !important; background: #ffffff !important; border-radius: 18px !important; border: 1.5px solid rgba(0,0,0,0.08) !important; border-bottom: 5px solid rgba(0,0,0,0.16) !important; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.08) !important; overflow: visible !important;">
           <div class="admin-stat-header" style="display: flex !important; align-items: center !important; justify-content: space-between !important; width: 100% !important; margin-left: 0 !important; padding-left: 4px !important;">
             <span class="admin-stat-label" style="font-size: 0.72rem !important; font-weight: 700 !important; letter-spacing: 0.06em !important; color: #6B7280 !important; text-transform: uppercase !important; line-height: 1.2 !important;">Expected Fee (${currentMonthName})</span>
-            <div class="admin-stat-icon-3d bg-stone-100 text-stone-700" style="width: 34px !important; height: 34px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 12px !important; box-shadow: 0 4px 8px rgba(0,0,0,0.08) !important; font-size: 1rem !important;">📋</div>
+            <div class="admin-stat-icon-3d bg-stone-100 text-brand-dark" style="width: 34px !important; height: 34px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 12px !important; box-shadow: 0 4px 8px rgba(0,0,0,0.08) !important; font-size: 1rem !important;">📅</div>
           </div>
           <div class="admin-stat-value" style="font-size: 1.85rem !important; font-weight: 800 !important; line-height: 1.1 !important; color: #111827 !important; margin: 2px 0 !important; margin-left: 0 !important; padding-left: 4px !important; letter-spacing: -0.02em !important;">₹${summary.expectedFee.toLocaleString()}</div>
-          <div class="admin-stat-subtitle text-muted" style="font-size: 0.75rem !important; font-weight: 500 !important; color: #6B7280 !important; line-height: 1.35 !important; margin-left: 0 !important; padding-left: 4px !important;">${summary.totalStudents} Active students eligible</div>
+          <div class="admin-stat-subtitle text-muted" style="font-size: 0.75rem !important; font-weight: 500 !important; color: #6B7280 !important; line-height: 1.35 !important; margin-left: 0 !important; padding-left: 4px !important;">${continuingCount} Continuing eligible students</div>
         </div>
 
         <div class="admin-stat-card-3d"
              style="padding: 22px 26px !important; box-sizing: border-box !important; min-height: 125px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; gap: 8px !important; background: #ffffff !important; border-radius: 18px !important; border: 1.5px solid rgba(0,0,0,0.08) !important; border-bottom: 5px solid rgba(0,0,0,0.16) !important; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.08) !important; overflow: visible !important;">
           <div class="admin-stat-header" style="display: flex !important; align-items: center !important; justify-content: space-between !important; width: 100% !important; margin-left: 0 !important; padding-left: 4px !important;">
             <span class="admin-stat-label" style="font-size: 0.72rem !important; font-weight: 700 !important; letter-spacing: 0.06em !important; color: #047857 !important; text-transform: uppercase !important; line-height: 1.2 !important;">Collected Amount</span>
-            <div class="admin-stat-icon-3d bg-emerald-50 text-emerald-700" style="width: 34px !important; height: 34px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 12px !important; box-shadow: 0 4px 8px rgba(0,0,0,0.08) !important; font-size: 1rem !important;">💳</div>
+            <div class="admin-stat-icon-3d bg-emerald-50 text-emerald-700" style="width: 34px !important; height: 34px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 12px !important; box-shadow: 0 4px 8px rgba(0,0,0,0.08) !important; font-size: 1rem !important;">💰</div>
           </div>
           <div class="admin-stat-value" style="font-size: 1.85rem !important; font-weight: 800 !important; line-height: 1.1 !important; color: #047857 !important; margin: 2px 0 !important; margin-left: 0 !important; padding-left: 4px !important; letter-spacing: -0.02em !important;">₹${summary.collectedFee.toLocaleString()}</div>
           <div class="admin-stat-subtitle text-emerald" style="font-size: 0.75rem !important; font-weight: 500 !important; color: #059669 !important; line-height: 1.35 !important; margin-left: 0 !important; padding-left: 4px !important;">Full: ${summary.fullPaidCount} • Partial: ${summary.halfPaidCount}</div>
@@ -680,7 +865,7 @@ function renderFeesManagementTab(container) {
           </div>
           <div class="admin-stat-value" style="font-size: 1.85rem !important; font-weight: 800 !important; line-height: 1.1 !important; color: #111827 !important; margin: 2px 0 !important; margin-left: 0 !important; padding-left: 4px !important; letter-spacing: -0.02em !important;">${collectionRate}%</div>
           <div style="margin-left: 0 !important; padding-left: 4px !important;">
-            <div class="admin-stat-subtitle text-muted" style="font-size: 0.75rem !important; font-weight: 500 !important; color: #6B7280 !important; line-height: 1.35 !important; margin-bottom: 6px !important;">${collectionRate >= 80 ? 'Excellent collection pace' : 'In progress this cycle'}</div>
+            <div class="admin-stat-subtitle text-muted" style="font-size: 0.75rem !important; font-weight: 500 !important; color: #6B7280 !important; line-height: 1.35 !important; margin-bottom: 6px !important;">${discontinuedCount > 0 ? discontinuedCount + ' Discontinued (No Dues)' : 'Monthly billing cycle'}</div>
             <div class="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
               <div class="bg-emerald-600 h-full rounded-full transition-all" style="width: ${collectionRate}%"></div>
             </div>
@@ -694,27 +879,36 @@ function renderFeesManagementTab(container) {
           <table class="w-full text-left text-xs">
             <thead class="bg-[#FAF6EE] text-brand-muted uppercase tracking-wider border-b border-[#ECE2D2]">
               <tr>
-                <th class="py-3 px-4">Student Name & Class</th>
+                <th class="py-3 px-4">Student Name & Status</th>
+                <th class="py-3 px-4 cursor-pointer select-none hover:text-brand-dark transition" onclick="toggleLedgerClassSort()" title="Click to sort by Class (LKG → 10th / 10th → LKG)">
+                  Class <span class="text-[10px]">${adminLedgerSort === 'class-desc' ? '▼' : adminLedgerSort === 'class-asc' ? '▲' : '↕'}</span>
+                </th>
                 <th class="py-3 px-4">Monthly Fee</th>
                 <th class="py-3 px-4">Due Date</th>
                 <th class="py-3 px-4">Paid Date</th>
                 <th class="py-3 px-4">Paid Amount</th>
                 <th class="py-3 px-4">Balance Due</th>
-                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Fee Status</th>
                 <th class="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#F4ECE1]">
-              ${rows.length === 0 ? `
-                <tr><td colspan="8" class="text-center py-8 text-brand-muted">No students enrolled on or before ${currentMonthName} ${year}.</td></tr>
-              ` : rows.map(r => {
-                const statusBadge = r.status === 'Full Paid'
-                  ? `<span class="badge-3d-capsule badge-3d-paid text-[10px]">🟢 Full Paid</span>`
+              ${(() => {
+                const sortFn = window.sortStudentList || function(l) { return l; };
+                const sortedRows = sortFn(displayRows, adminLedgerSort);
+                return sortedRows.length === 0 ? `
+                  <tr><td colspan="9" class="text-center py-8 text-brand-muted">No student fee records found for ${currentMonthName} ${year}.</td></tr>
+                ` : sortedRows.map(r => {
+                const isDisc = r.status === 'Discontinued' || r.isDiscontinued;
+                const statusBadge = isDisc
+                  ? `<span class="badge-3d-capsule bg-stone-100 text-stone-600 border border-stone-300 text-[10px]">Discontinued (No Dues)</span>`
+                  : r.status === 'Full Paid'
+                  ? `<span class="badge-3d-capsule badge-3d-paid text-[10px]">✓ Full Paid</span>`
                   : r.status === 'Half Paid'
-                  ? `<span class="badge-3d-capsule badge-3d-half text-[10px]">🟠 Half Paid</span>`
-                  : `<span class="badge-3d-capsule badge-3d-unpaid text-[10px]">🔴 Pending</span>`;
+                  ? `<span class="badge-3d-capsule badge-3d-half text-[10px]">◑ Half Paid</span>`
+                  : `<span class="badge-3d-capsule badge-3d-unpaid text-[10px]">⏳ Pending</span>`;
 
-                const reminderUrl = window.SSCStore.getWhatsAppReminderLink(r.studentId, year, month);
+                const reminderUrl = window.SSCStore ? window.SSCStore.getWhatsAppReminderLink(r.studentId, year, month) : '#';
                 const studentObj = (window.SSCStore && typeof window.SSCStore.getStudentById === 'function')
                   ? window.SSCStore.getStudentById(r.studentId)
                   : null;
@@ -723,19 +917,42 @@ function renderFeesManagementTab(container) {
                 const studentDetail = studentObj?.school || studentObj?.roll_no || studentObj?.rollNo || r.school || r.rollNo || 'Regular Batch';
 
                 return `
-                  <tr class="row-float-3d hover:bg-[#FAF7F2] transition">
+                  <tr class="row-float-3d hover:bg-[#FAF7F2] transition ${isDisc ? 'opacity-70 bg-stone-50/50' : ''}">
                     <td class="py-3.5 px-4 font-bold text-brand-dark">
-                      ${studentName}
-                      <span class="block text-[11px] font-normal text-brand-muted">${studentClass} • ${studentDetail}</span>
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span>${studentName}</span>
+                        ${isDisc ? `
+                          <button onclick="toggleAdminStudentStatus(${r.studentId})"
+                                  title="Click to mark as Continuing"
+                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 transition cursor-pointer">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Discontinued
+                          </button>
+                        ` : `
+                          <button onclick="toggleAdminStudentStatus(${r.studentId})"
+                                  title="Click to mark as Discontinued"
+                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition cursor-pointer">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Continuing
+                          </button>
+                        `}
+                      </div>
+                      <span class="block text-[11px] font-normal text-brand-muted">${studentDetail}</span>
                     </td>
-                    <td class="py-3.5 px-4 font-semibold text-brand-dark">₹${r.monthlyFee}</td>
-                    <td class="py-3.5 px-4 font-mono text-brand-dark">${r.dueDate}</td>
+                    <td class="py-3.5 px-4">
+                      <span class="badge-3d-inset text-[10px] font-bold px-2 py-0.5 rounded text-brand-dark">${studentClass}</span>
+                    </td>
+                    <td class="py-3.5 px-4 font-semibold text-brand-dark">${isDisc ? '—' : '₹' + r.monthlyFee}</td>
+                    <td class="py-3.5 px-4 font-mono text-brand-dark">${isDisc ? '—' : r.dueDate}</td>
                     <td class="py-3.5 px-4 font-mono text-brand-muted">${r.paidDate || '—'}</td>
                     <td class="py-3.5 px-4 font-bold text-emerald-700">₹${r.paidAmount}</td>
                     <td class="py-3.5 px-4 font-bold ${r.balance > 0 ? 'text-red-700' : 'text-stone-400'}">₹${r.balance}</td>
                     <td class="py-3.5 px-4">${statusBadge}</td>
                     <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
-                      ${r.balance > 0 ? `
+                      ${isDisc ? `
+                        <button onclick="toggleAdminStudentStatus(${r.studentId})"
+                                class="btn-3d-tactile-sm px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-semibold" title="Mark student as Continuing">
+                          Reactivate
+                        </button>
+                      ` : r.balance > 0 ? `
                         <button onclick="openRecordPaymentModal(${r.studentId}, ${year}, ${month}, ${r.balance})"
                                 class="btn-3d-tactile-sm px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-semibold" title="Pay balance">
                           Pay Balance
@@ -756,7 +973,8 @@ function renderFeesManagementTab(container) {
                     </td>
                   </tr>
                 `;
-              }).join('')}
+              }).join('');
+              })()}
             </tbody>
           </table>
         </div>
@@ -766,9 +984,64 @@ function renderFeesManagementTab(container) {
 }
 
 window.changeLedgerYear = function(newYear) {
-  window.currentLedgerYear = Number(newYear);
+  if (newYear === '__custom__' || newYear === 'custom') {
+    promptCustomLedgerYear();
+    return;
+  }
+  const parsed = Number(newYear);
+  if (!isNaN(parsed) && parsed >= 2000 && parsed <= 2100) {
+    window.currentLedgerYear = parsed;
+    const container = document.getElementById('admin-tab-content-area');
+    if (container) renderFeesManagementTab(container);
+  }
+};
+
+
+window.handleAdminStudentSortChange = function(newSort) {
+  adminStudentSort = newSort;
+  const container = document.getElementById('admin-tab-content-area');
+  if (container) renderStudentsManagementTab(container);
+};
+
+window.toggleAdminStudentClassSort = function() {
+  adminStudentSort = (adminStudentSort === 'class-asc') ? 'class-desc' : 'class-asc';
+  const container = document.getElementById('admin-tab-content-area');
+  if (container) renderStudentsManagementTab(container);
+};
+
+window.changeLedgerSort = function(newSort) {
+  adminLedgerSort = newSort;
   const container = document.getElementById('admin-tab-content-area');
   if (container) renderFeesManagementTab(container);
+};
+
+window.toggleLedgerClassSort = function() {
+  adminLedgerSort = (adminLedgerSort === 'class-asc') ? 'class-desc' : 'class-asc';
+  const container = document.getElementById('admin-tab-content-area');
+  if (container) renderFeesManagementTab(container);
+};
+
+window.changeLedgerStatusFilter = function(newFilter) {
+  window.adminLedgerStatusFilter = newFilter;
+  const container = document.getElementById('admin-tab-content-area');
+  if (container) renderFeesManagementTab(container);
+};
+
+window.toggleAdminStudentStatus = function(studentId) {
+  const updated = window.SSCStore ? window.SSCStore.toggleStudentStatus(studentId) : null;
+  if (updated) {
+    const isDisc = updated.status === 'discontinued' || updated.status === 'inactive';
+    const label = isDisc ? 'Discontinued' : 'Continuing';
+    showGlobalToast(`Student "${updated.name}" is now marked as ${label}.`, true);
+    const container = document.getElementById('admin-tab-content-area');
+    if (container) {
+      if (window.currentAdminTab === 'fees' || (window.location.hash && window.location.hash.includes('fees'))) {
+        renderFeesManagementTab(container);
+      } else {
+        renderStudentsManagementTab(container);
+      }
+    }
+  }
 };
 
 window.changeLedgerMonth = function(newMonth) {
