@@ -1348,60 +1348,8 @@ const INITIAL_STUDENTS = [
   }
 ];
 
-// Initial Enrollment Requests
-const INITIAL_ENROLLMENTS = [
-  {
-    id: 1,
-    requestId: 'SSC-ENR-2026-1001',
-    studentName: 'Abhinav Reddy',
-    requestedClass: '9th Class',
-    parentName: 'Sudhakar Reddy',
-    fatherName: 'Sudhakar Reddy',
-    motherName: 'Sunita Reddy',
-    phone: '9849012345',
-    schoolName: 'Delhi Public School',
-    board: 'CBSE',
-    streamSubject: 'Mathematics & Science Focus',
-    additionalNotes: 'Needs special guidance in Algebra and Physics numericals.',
-    status: 'pending',
-    isRead: false,
-    createdAt: '2026-10-18T14:20:00Z'
-  },
-  {
-    id: 2,
-    requestId: 'SSC-ENR-2026-1002',
-    studentName: 'Samyuktha Rao',
-    requestedClass: '6th Class',
-    parentName: 'Anil Kumar Rao',
-    fatherName: 'Anil Kumar Rao',
-    motherName: 'Padma',
-    phone: '9876523456',
-    schoolName: 'St. Ann’s High School',
-    board: 'State Board',
-    streamSubject: 'All Subjects Comprehensive',
-    additionalNotes: 'Seeking evening batch from 5 PM.',
-    status: 'pending',
-    isRead: false,
-    createdAt: '2026-10-19T09:15:00Z'
-  },
-  {
-    id: 3,
-    requestId: 'SSC-ENR-2026-1003',
-    studentName: 'Charan Teja',
-    requestedClass: '10th Class',
-    parentName: 'Srinivasulu',
-    fatherName: 'Srinivasulu',
-    motherName: 'Kavitha',
-    phone: '9908134567',
-    schoolName: 'Narayana Olympiad School',
-    board: 'State Board',
-    streamSubject: 'Board Exam Intensive Prep',
-    additionalNotes: 'Contacted parent via call, scheduling orientation.',
-    status: 'contacted',
-    isRead: true,
-    createdAt: '2026-10-17T11:00:00Z'
-  }
-];
+// Initial Enrollment Requests (Empty by default: populated only by real visitor submissions)
+const INITIAL_ENROLLMENTS = [];
 
 // Initial Staff Accounts
 const INITIAL_STAFF = [
@@ -1410,12 +1358,8 @@ const INITIAL_STAFF = [
   { id: 'stf-003', email: 'counselor@sscstudycircle.com', fullName: 'Ananya Sharma (Academic Counselor)', phone: '9701233445', role: 'staff', status: 'pending', createdAt: '2026-10-18T10:30:00Z', approvedAt: null }
 ];
 
-// Initial Notifications
-const INITIAL_NOTIFICATIONS = [
-  { id: 'notif-1', title: 'New Enrollment Application', message: 'Parent Sudhakar Reddy submitted an enrollment request for Abhinav Reddy (9th Class).', type: 'enrollment', referenceId: 'SSC-ENR-2026-1001', isRead: false, createdAt: '2026-10-18T14:20:00Z' },
-  { id: 'notif-2', title: 'New Enrollment Application', message: 'Parent Anil Kumar Rao submitted an enrollment request for Samyuktha Rao (6th Class).', type: 'enrollment', referenceId: 'SSC-ENR-2026-1002', isRead: false, createdAt: '2026-10-19T09:15:00Z' },
-  { id: 'notif-3', title: 'Staff Registration Pending', message: 'Ananya Sharma (counselor@sscstudycircle.com) submitted registration awaiting Director approval.', type: 'staff', referenceId: 'stf-003', isRead: false, createdAt: '2026-10-18T10:30:00Z' }
-];
+// Initial Notifications (Empty by default: populated only by real actions)
+const INITIAL_NOTIFICATIONS = [];
 
 class CentralSSCStore {
   constructor() {
@@ -1437,6 +1381,41 @@ class CentralSSCStore {
         if (parsed && Array.isArray(parsed.students) && parsed.students.length >= 40 && !hasOldData) {
           if (!Array.isArray(parsed.recycleBin)) parsed.recycleBin = [];
           if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
+          if (!Array.isArray(parsed.enrollments)) parsed.enrollments = [];
+          if (!parsed.visitorStats || typeof parsed.visitorStats !== 'object') {
+            parsed.visitorStats = { totalVisits: 0, recentSessions: [] };
+          }
+          if (!Array.isArray(parsed.visitorStats.recentSessions)) {
+            parsed.visitorStats.recentSessions = [];
+          }
+
+          // Purge any legacy dummy/seed enrollment requests and notifications from localStorage
+          const dummyEnrIds = ['SSC-ENR-2026-1001', 'SSC-ENR-2026-1002', 'SSC-ENR-2026-1003'];
+          const dummyStudentNames = ['Abhinav Reddy', 'Samyuktha Rao', 'Charan Teja'];
+          const dummyNotifIds = ['notif-1', 'notif-2', 'notif-3'];
+
+          const hadDummyEnr = parsed.enrollments.some(e => dummyEnrIds.includes(e.requestId) || dummyStudentNames.includes(e.studentName));
+          const hadDummyNotif = parsed.notifications.some(n => dummyNotifIds.includes(n.id) || dummyEnrIds.includes(n.referenceId));
+
+          parsed.enrollments = parsed.enrollments.filter(e => 
+            !dummyEnrIds.includes(e.requestId) && !dummyStudentNames.includes(e.studentName)
+          );
+
+          parsed.notifications = parsed.notifications.filter(n =>
+            !dummyNotifIds.includes(n.id) && !dummyEnrIds.includes(n.referenceId)
+          );
+
+          parsed.recycleBin = (parsed.recycleBin || []).filter(item => {
+            const data = item.data || {};
+            return !dummyEnrIds.includes(data.requestId) && !dummyStudentNames.includes(data.studentName);
+          });
+
+          if (hadDummyEnr || hadDummyNotif) {
+            try {
+              localStorage.setItem(SSC_STORE_KEY, JSON.stringify(parsed));
+            } catch (err) {}
+          }
+
           return parsed;
         }
       }
@@ -1452,6 +1431,10 @@ class CentralSSCStore {
       staff: JSON.parse(JSON.stringify(INITIAL_STAFF)),
       notifications: JSON.parse(JSON.stringify(INITIAL_NOTIFICATIONS)),
       recycleBin: [],
+      visitorStats: {
+        totalVisits: 0,
+        recentSessions: []
+      },
       lastUpdated: new Date().toISOString()
     };
     this.saveToStorage(defaultState);
@@ -2746,6 +2729,63 @@ class CentralSSCStore {
 
   getWhatsAppReceiptLink(receiptNo, studentName, studentClass, monthName, amount, date, mode, parentPhone = '') {
     return this.getWhatsAppReceiptUrl(receiptNo, studentName, studentClass, monthName, amount, date, mode, parentPhone);
+  }
+
+  // ========================================================================
+  // REAL WEBSITE VISITOR STATS (Zero-SQL, Public Browser Sessions)
+  // ========================================================================
+  getVisitorStats() {
+    if (!this.state.visitorStats || typeof this.state.visitorStats !== 'object') {
+      this.state.visitorStats = { totalVisits: 0, recentSessions: [] };
+    }
+    if (!Array.isArray(this.state.visitorStats.recentSessions)) {
+      this.state.visitorStats.recentSessions = [];
+    }
+    return this.state.visitorStats;
+  }
+
+  recordVisitorSession(session) {
+    if (!this.state.visitorStats || typeof this.state.visitorStats !== 'object') {
+      this.state.visitorStats = { totalVisits: 0, recentSessions: [] };
+    }
+    if (!Array.isArray(this.state.visitorStats.recentSessions)) {
+      this.state.visitorStats.recentSessions = [];
+    }
+
+    const sessionEntry = {
+      id: 'sess-' + Date.now() + '-' + Math.floor(100 + Math.random() * 900),
+      timestamp: session.timestamp || new Date().toISOString(),
+      page: session.page || 'Home Page',
+      device: session.device || 'Desktop',
+      browser: session.browser || 'Browser',
+      referrer: session.referrer || 'Direct / Search'
+    };
+
+    this.state.visitorStats.recentSessions.unshift(sessionEntry);
+    if (this.state.visitorStats.recentSessions.length > 30) {
+      this.state.visitorStats.recentSessions = this.state.visitorStats.recentSessions.slice(0, 30);
+    }
+
+    if (typeof session.totalVisits === 'number' && session.totalVisits >= 0) {
+      this.state.visitorStats.totalVisits = session.totalVisits;
+    } else {
+      this.state.visitorStats.totalVisits = (this.state.visitorStats.totalVisits || 0) + 1;
+    }
+
+    this.saveToStorage();
+    this.emit('VISITOR_SESSION_RECORDED', { session: sessionEntry, totalVisits: this.state.visitorStats.totalVisits });
+    return sessionEntry;
+  }
+
+  updateVisitorTotal(count) {
+    if (!this.state.visitorStats || typeof this.state.visitorStats !== 'object') {
+      this.state.visitorStats = { totalVisits: 0, recentSessions: [] };
+    }
+    if (typeof count === 'number' && !isNaN(count)) {
+      this.state.visitorStats.totalVisits = count;
+      this.saveToStorage();
+      this.emit('VISITOR_TOTAL_UPDATED', { totalVisits: count });
+    }
   }
 
   // Reset to initial clean state

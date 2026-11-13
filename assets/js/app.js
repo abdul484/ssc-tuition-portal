@@ -60,6 +60,11 @@ function initSPARouter() {
     // Update browser tab title immediately
     updateDocumentTitle(route);
 
+    // Real visitor session tracking (zero-SQL, public pages only)
+    if (route !== 'admin' && typeof window.trackVisitorSession === 'function') {
+      window.trackVisitorSession(route);
+    }
+
     // Hide all page views
     const allViews = document.querySelectorAll('.page-view');
     allViews.forEach(view => {
@@ -221,6 +226,9 @@ function initSPARouter() {
   navigateTo(initialRoute, false);
   updateDocumentTitle(initialRoute);
   updateNavbarEnrollButton(initialRoute);
+  if (initialRoute !== 'admin' && typeof window.trackVisitorSession === 'function') {
+    window.trackVisitorSession(initialRoute);
+  }
 
   window.addEventListener('hashchange', () => {
     const current = window.location.hash.replace('#', '') || 'home';
@@ -1898,3 +1906,140 @@ function showGlobalToast(message, isSuccess = true) {
 
 window.showToast = showGlobalToast;
 window.showGlobalToast = showGlobalToast;
+
+
+// ==============================================================================
+// REAL WEBSITE VISITOR TRACKING SERVICE (Zero-SQL, Session-Scoped)
+// ==============================================================================
+const VISITOR_SESSION_KEY = 'ssc_session_visited';
+const VISITOR_COUNTER_ENDPOINTS = {
+  hit: [
+    'https://api.counterapi.dev/v1/students-study-circle/visits/up',
+    'https://countapi.mileshilliard.com/api/v1/hit/ssc_tuition_sscstudycircle_visits',
+    'https://abacus.jasoncameron.dev/hit/ssc-students-study-circle/visits'
+  ],
+  get: [
+    'https://api.counterapi.dev/v1/students-study-circle/visits',
+    'https://countapi.mileshilliard.com/api/v1/get/ssc_tuition_sscstudycircle_visits',
+    'https://abacus.jasoncameron.dev/get/ssc-students-study-circle/visits'
+  ]
+};
+
+function detectUserDevice() {
+  const ua = navigator.userAgent || '';
+  if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated/i.test(ua)) {
+    return 'Mobile';
+  }
+  if (/iPad|Tablet/i.test(ua)) {
+    return 'Tablet';
+  }
+  return 'Desktop';
+}
+
+function detectUserBrowser() {
+  const ua = navigator.userAgent || '';
+  if (ua.includes('Edg/')) return 'Edge';
+  if (ua.includes('Chrome/') && !ua.includes('Edg/')) return 'Chrome';
+  if (ua.includes('Safari/') && !ua.includes('Chrome/')) return 'Safari';
+  if (ua.includes('Firefox/')) return 'Firefox';
+  if (ua.includes('OPR/') || ua.includes('Opera/')) return 'Opera';
+  return 'Browser';
+}
+
+function getCleanPageName(route) {
+  const r = (route || window.location.hash.replace('#', '') || '').toLowerCase();
+  const path = (window.location.pathname || '').toLowerCase();
+  if (r === 'books' || path.includes('books')) return 'Books Catalog';
+  if (r === 'students' || path.includes('students')) return 'Students Directory';
+  if (r === 'classes' || path.includes('classes')) return 'Tuition Programs';
+  if (r === 'enrollment' || path.includes('enrollment')) return 'Online Enrollment';
+  if (r === 'about' || path.includes('about')) return 'About Study Circle';
+  return 'Home Page';
+}
+
+async function fetchRealVisitorCount() {
+  for (const url of VISITOR_COUNTER_ENDPOINTS.get) {
+    try {
+      const resp = await fetch(url, { method: 'GET', mode: 'cors' });
+      if (resp.ok) {
+        const data = await resp.json();
+        const val = typeof data.value === 'number' ? data.value : (typeof data.count === 'number' ? data.count : null);
+        if (typeof val === 'number') {
+          return val;
+        }
+      } else if (resp.status === 404) {
+        return 0;
+      }
+    } catch (e) {
+      // Continue to next endpoint in fallback chain
+    }
+  }
+  const stats = window.SSCStore ? window.SSCStore.getVisitorStats() : null;
+  return stats ? (stats.totalVisits || 0) : 0;
+}
+window.fetchRealVisitorCount = fetchRealVisitorCount;
+
+async function trackVisitorSession(route) {
+  const currentRoute = (route || window.location.hash.replace('#', '') || 'home').toLowerCase();
+  const path = (window.location.pathname || '').toLowerCase();
+
+  // STRICT REQUIREMENT: Do NOT increment when Admin is browsing the admin portal
+  if (currentRoute === 'admin' || window.location.hash.includes('admin') || path.includes('admin')) {
+    return;
+  }
+  if (window.AdminAuth && window.AdminAuth.isLoggedIn()) {
+    const adminEl = document.getElementById('admin');
+    if (adminEl && adminEl.style.display !== 'none' && !adminEl.classList.contains('hidden')) {
+      return;
+    }
+  }
+
+  // Session-scoped: Only increment once per unique browser session
+  if (sessionStorage.getItem(VISITOR_SESSION_KEY)) {
+    return;
+  }
+
+  // Set immediately to guard against parallel triggers
+  sessionStorage.setItem(VISITOR_SESSION_KEY, new Date().toISOString());
+
+  let totalVisits = null;
+
+  // Real-time hit counter API call
+  for (const url of VISITOR_COUNTER_ENDPOINTS.hit) {
+    try {
+      const resp = await fetch(url, { method: 'GET', mode: 'cors' });
+      if (resp.ok) {
+        const data = await resp.json();
+        const val = typeof data.value === 'number' ? data.value : (typeof data.count === 'number' ? data.count : null);
+        if (typeof val === 'number') {
+          totalVisits = val;
+          break;
+        }
+      }
+    } catch (err) {
+      // Try next endpoint
+    }
+  }
+
+  let ref = 'Direct / Search';
+  try {
+    if (document.referrer) {
+      const parsed = new URL(document.referrer, window.location.href);
+      ref = parsed.hostname || document.referrer;
+    }
+  } catch (e) {}
+
+  const sessionData = {
+    timestamp: new Date().toISOString(),
+    page: getCleanPageName(currentRoute),
+    device: detectUserDevice(),
+    browser: detectUserBrowser(),
+    referrer: ref,
+    totalVisits: totalVisits
+  };
+
+  if (window.SSCStore && typeof window.SSCStore.recordVisitorSession === 'function') {
+    window.SSCStore.recordVisitorSession(sessionData);
+  }
+}
+window.trackVisitorSession = trackVisitorSession;

@@ -378,6 +378,22 @@ function renderOverviewTab(container) {
   };
 
   const enrollments = window.SSCStore ? window.SSCStore.getEnrollments() : [];
+  const visitorStats = window.SSCStore ? window.SSCStore.getVisitorStats() : { totalVisits: 0, recentSessions: [] };
+
+  // Silently refresh live count in background
+  if (typeof window.fetchRealVisitorCount === 'function') {
+    window.fetchRealVisitorCount().then(liveCount => {
+      if (typeof liveCount === 'number') {
+        const kpiEl = document.getElementById('admin-kpi-visitor-count');
+        const panelEl = document.getElementById('admin-panel-visitor-count');
+        if (kpiEl) kpiEl.textContent = liveCount;
+        if (panelEl) panelEl.textContent = liveCount;
+        if (window.SSCStore && typeof window.SSCStore.updateVisitorTotal === 'function') {
+          window.SSCStore.updateVisitorTotal(liveCount);
+        }
+      }
+    }).catch(() => {});
+  }
 
   container.innerHTML = `
     <div class="space-y-6">
@@ -445,6 +461,17 @@ function renderOverviewTab(container) {
           <div class="admin-stat-value" style="font-size: 1.85rem !important; font-weight: 800 !important; line-height: 1.1 !important; color: #111827 !important; margin: 2px 0 !important; margin-left: 0 !important; padding-left: 4px !important; letter-spacing: -0.02em !important;">${overview.booksCatalogCount}</div>
           <div class="admin-stat-subtitle text-muted" style="font-size: 0.75rem !important; font-weight: 500 !important; color: #6B7280 !important; line-height: 1.35 !important; margin-left: 0 !important; padding-left: 4px !important;">${overview.classesCount} active tuition grades</div>
         </div>
+
+        <!-- Live Website Visits KPI Card -->
+        <div class="admin-stat-card-3d"
+             style="padding: 22px 26px !important; box-sizing: border-box !important; min-height: 125px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; gap: 8px !important; background: #ffffff !important; border-radius: 18px !important; border: 1.5px solid rgba(0,0,0,0.08) !important; border-bottom: 5px solid rgba(0,0,0,0.16) !important; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.08) !important; overflow: visible !important;">
+          <div class="admin-stat-header" style="display: flex !important; align-items: center !important; justify-content: space-between !important; width: 100% !important; margin-left: 0 !important; padding-left: 4px !important;">
+            <span class="admin-stat-label" style="font-size: 0.72rem !important; font-weight: 700 !important; letter-spacing: 0.06em !important; color: #6B7280 !important; text-transform: uppercase !important; line-height: 1.2 !important;">Website Visits</span>
+            <div class="admin-stat-icon-3d bg-purple-50 text-purple-700" style="width: 34px !important; height: 34px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 12px !important; box-shadow: 0 4px 8px rgba(0,0,0,0.08) !important; font-size: 1rem !important;">🌐</div>
+          </div>
+          <div class="admin-stat-value" id="admin-kpi-visitor-count" style="font-size: 1.85rem !important; font-weight: 800 !important; line-height: 1.1 !important; color: #6D28D9 !important; margin: 2px 0 !important; margin-left: 0 !important; padding-left: 4px !important; letter-spacing: -0.02em !important;">${visitorStats.totalVisits || 0}</div>
+          <div class="admin-stat-subtitle" style="font-size: 0.75rem !important; font-weight: 500 !important; color: #7C3AED !important; line-height: 1.35 !important; margin-left: 0 !important; padding-left: 4px !important;">Real-time public visits</div>
+        </div>
       </div>
 
       <!-- Recycle Bin Notice (if items exist) -->
@@ -459,6 +486,70 @@ function renderOverviewTab(container) {
           </button>
         </div>
       ` : ''}
+
+      <!-- Live Website Visits & Visitor Traffic Card -->
+      <div class="bg-white rounded-3xl p-6 border border-[#ECE2D2] shadow-xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-[#F4ECE1]">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h4 class="font-serif font-bold text-lg text-brand-dark">Live Website Traffic & Visitor Sessions</h4>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live API
+              </span>
+            </div>
+            <p class="text-xs text-brand-muted mt-0.5">Real-time unique browser sessions on public pages (Home, Books, Students, Classes, Enrollment)</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="bg-[#FAF6EE] px-4 py-2 rounded-2xl border border-[#ECE2D2] text-center min-w-[120px]">
+              <span class="text-[10px] uppercase font-bold tracking-wider text-brand-muted block">Total Visits</span>
+              <span id="admin-panel-visitor-count" class="font-mono text-xl font-extrabold text-purple-900">${visitorStats.totalVisits || 0}</span>
+            </div>
+            <button onclick="refreshVisitorStats()" id="btn-refresh-visitor-stats" class="px-3.5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-brand-dark text-xs font-bold transition flex items-center gap-2 border border-[#ECE2D2] shadow-2xs">
+              <span id="visitor-refresh-icon">🔄</span>
+              <span>Refresh Stats</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent Session Logs Table -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-brand-muted">Recent Session Logs (${visitorStats.recentSessions.length})</h5>
+            <span class="text-[11px] text-brand-muted">Indian Standard Time (IST)</span>
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-[#F4ECE1]">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#FAF7F2] text-brand-muted uppercase tracking-wider border-b border-[#F0E8DC]">
+                <tr>
+                  <th class="py-2.5 px-3.5">Device</th>
+                  <th class="py-2.5 px-3.5">Browser</th>
+                  <th class="py-2.5 px-3.5">Page Visited</th>
+                  <th class="py-2.5 px-3.5">Referrer</th>
+                  <th class="py-2.5 px-3.5 text-right">Time (IST)</th>
+                </tr>
+              </thead>
+              <tbody id="visitor-sessions-tbody" class="divide-y divide-[#F7F2EB]">
+                ${visitorStats.recentSessions.length === 0 ? `
+                  <tr><td colspan="5" class="text-center py-6 text-brand-muted">No public visitor sessions recorded yet. Visits will appear here live when visitors view public pages.</td></tr>
+                ` : visitorStats.recentSessions.slice(0, 15).map(s => `
+                  <tr class="hover:bg-[#FAF7F2] transition">
+                    <td class="py-2.5 px-3.5 font-semibold text-brand-dark flex items-center gap-1.5">
+                      <span>${s.device === 'Mobile' ? '📱' : (s.device === 'Tablet' ? '📟' : '💻')}</span>
+                      <span>${s.device}</span>
+                    </td>
+                    <td class="py-2.5 px-3.5">
+                      <span class="px-2 py-0.5 rounded-full bg-stone-100 font-medium text-[11px]">${s.browser}</span>
+                    </td>
+                    <td class="py-2.5 px-3.5 font-medium text-brand-dark">${s.page}</td>
+                    <td class="py-2.5 px-3.5 text-brand-muted text-[11px]">${s.referrer || 'Direct / Search'}</td>
+                    <td class="py-2.5 px-3.5 text-right text-brand-muted font-mono text-[11px]">${formatISTTime(s.timestamp)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       <!-- Recent Applications Preview -->
       <div class="bg-white rounded-3xl p-6 border border-[#ECE2D2] shadow-xs">
@@ -485,7 +576,9 @@ function renderOverviewTab(container) {
               </tr>
             </thead>
             <tbody class="divide-y divide-[#F7F2EB]">
-              ${enrollments.slice(0, 4).map(e => `
+              ${enrollments.length === 0 ? `
+                <tr><td colspan="6" class="text-center py-6 text-brand-muted">No online enrollment applications submitted yet.</td></tr>
+              ` : enrollments.slice(0, 4).map(e => `
                 <tr class="hover:bg-[#FAF7F2] transition">
                   <td class="py-3 px-3 font-mono text-[11px] font-semibold text-brand-dark">${e.requestId}</td>
                   <td class="py-3 px-3 font-bold text-brand-dark">${e.studentName}</td>
@@ -1858,3 +1951,78 @@ window.AdminDashboard = {
   renderHeader: renderAdminHeader,
   renderTabContent: renderAdminTabContent
 };
+
+
+// ==============================================================================
+// VISITOR TRACKING HELPERS (IST Time & Refresh Stats)
+// ==============================================================================
+function formatISTTime(isoStr) {
+  if (!isoStr) return '—';
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }) + ' IST';
+  } catch (e) {
+    return isoStr;
+  }
+}
+window.formatISTTime = formatISTTime;
+
+async function refreshVisitorStats() {
+  const icon = document.getElementById('visitor-refresh-icon');
+  if (icon) icon.classList.add('animate-spin');
+
+  try {
+    let liveCount = null;
+    if (typeof window.fetchRealVisitorCount === 'function') {
+      liveCount = await window.fetchRealVisitorCount();
+    }
+    if (typeof liveCount === 'number' && window.SSCStore && typeof window.SSCStore.updateVisitorTotal === 'function') {
+      window.SSCStore.updateVisitorTotal(liveCount);
+    }
+
+    const stats = window.SSCStore ? window.SSCStore.getVisitorStats() : { totalVisits: 0, recentSessions: [] };
+    const currentTotal = typeof liveCount === 'number' ? liveCount : (stats.totalVisits || 0);
+
+    const kpiEl = document.getElementById('admin-kpi-visitor-count');
+    const panelEl = document.getElementById('admin-panel-visitor-count');
+    if (kpiEl) kpiEl.textContent = currentTotal;
+    if (panelEl) panelEl.textContent = currentTotal;
+
+    const tbody = document.getElementById('visitor-sessions-tbody');
+    if (tbody && stats) {
+      if (stats.recentSessions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-brand-muted">No public visitor sessions recorded yet. Visits will appear here live when visitors view public pages.</td></tr>`;
+      } else {
+        tbody.innerHTML = stats.recentSessions.slice(0, 15).map(s => `
+          <tr class="hover:bg-[#FAF7F2] transition">
+            <td class="py-2.5 px-3.5 font-semibold text-brand-dark flex items-center gap-1.5">
+              <span>${s.device === 'Mobile' ? '📱' : (s.device === 'Tablet' ? '📟' : '💻')}</span>
+              <span>${s.device}</span>
+            </td>
+            <td class="py-2.5 px-3.5">
+              <span class="px-2 py-0.5 rounded-full bg-stone-100 font-medium text-[11px]">${s.browser}</span>
+            </td>
+            <td class="py-2.5 px-3.5 font-medium text-brand-dark">${s.page}</td>
+            <td class="py-2.5 px-3.5 text-brand-muted text-[11px]">${s.referrer || 'Direct / Search'}</td>
+            <td class="py-2.5 px-3.5 text-right text-brand-muted font-mono text-[11px]">${formatISTTime(s.timestamp)}</td>
+          </tr>
+        `).join('');
+      }
+    }
+    showGlobalToast(`Live visitor stats refreshed (${currentTotal} total visits).`);
+  } catch (err) {
+    console.warn('Error refreshing visitor stats:', err);
+    showGlobalToast('Could not refresh live stats. Showing local data.', false);
+  } finally {
+    if (icon) icon.classList.remove('animate-spin');
+  }
+}
+window.refreshVisitorStats = refreshVisitorStats;

@@ -329,13 +329,8 @@ VALUES
 (140, '2026-06', 400.00, '2026-06-12', 'Cash', 'Full Paid', 'REC-202606-140', 'Advance tuition fee credited at enrollment')
 ON CONFLICT (receipt_no) DO NOTHING;
 
--- 11.5 Seed Enrollment Requests
-INSERT INTO public.enrollment_requests (request_id, student_name, requested_class, parent_name, father_name, mother_name, phone, school_name, board, stream_subject, additional_notes, status, is_read)
-VALUES
-('SSC-ENR-2026-1001', 'Abhinav Reddy', '9th Class', 'Sudhakar Reddy', 'Sudhakar Reddy', 'Sunita Reddy', '9849012345', 'Delhi Public School', 'CBSE', 'Mathematics & Science Focus', 'Needs special guidance in Algebra and Physics numericals.', 'pending', false),
-('SSC-ENR-2026-1002', 'Samyuktha Rao', '6th Class', 'Anil Kumar Rao', 'Anil Kumar Rao', 'Padma', '9876523456', 'St. Ann’s High School', 'State Board', 'All Subjects Comprehensive', 'Seeking evening batch from 5 PM.', 'pending', false),
-('SSC-ENR-2026-1003', 'Charan Teja', '10th Class', 'Srinivasulu', 'Srinivasulu', 'Kavitha', '9908134567', 'Narayana Olympiad School', 'State Board', 'Board Exam Intensive Prep', 'Contacted parent via call, scheduling orientation.', 'contacted', true)
-ON CONFLICT (request_id) DO NOTHING;
+-- 11.5 Purge Legacy Dummy/Seed Enrollment Requests
+DELETE FROM public.enrollment_requests WHERE request_id IN ('SSC-ENR-2026-1001', 'SSC-ENR-2026-1002', 'SSC-ENR-2026-1003') OR student_name IN ('Abhinav Reddy', 'Samyuktha Rao', 'Charan Teja');
 
 -- 11.6 Seed Staff Members
 INSERT INTO public.staff_members (id, email, full_name, phone, role, status)
@@ -345,10 +340,5 @@ VALUES
 ('stf-003', 'counselor@sscstudycircle.com', 'Ananya Sharma (Academic Counselor)', '9701233445', 'staff', 'pending')
 ON CONFLICT (id) DO NOTHING;
 
--- 11.7 Seed Notifications
-INSERT INTO public.admin_notifications (id, title, message, type, reference_id, is_read)
-VALUES
-('notif-1', 'New Enrollment Application', 'Parent Sudhakar Reddy submitted an enrollment request for Abhinav Reddy (9th Class).', 'enrollment', 'SSC-ENR-2026-1001', false),
-('notif-2', 'New Enrollment Application', 'Parent Anil Kumar Rao submitted an enrollment request for Samyuktha Rao (6th Class).', 'enrollment', 'SSC-ENR-2026-1002', false),
-('notif-3', 'Staff Registration Pending', 'Ananya Sharma (counselor@sscstudycircle.com) submitted registration awaiting Director approval.', 'staff', 'stf-003', false)
-ON CONFLICT (id) DO NOTHING;
+-- 11.7 Purge Legacy Dummy/Seed Notifications
+DELETE FROM public.admin_notifications WHERE id IN ('notif-1', 'notif-2', 'notif-3');

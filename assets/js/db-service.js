@@ -274,28 +274,42 @@ class DatabaseService {
         }));
       }
 
-      // 4. Enrollment Requests
-      if (rawEnrollments.length > 0) {
-        window.SSCStore.state.enrollments = rawEnrollments.map(e => ({
-          id: Number(e.id),
-          requestId: e.request_id,
-          studentName: e.student_name,
-          requestedClass: e.requested_class,
-          parentName: e.parent_name,
-          fatherName: e.father_name,
-          motherName: e.mother_name,
-          phone: e.phone,
-          email: e.email,
-          schoolName: e.school_name,
-          board: e.board,
-          streamSubject: e.stream_subject,
-          additionalNotes: e.additional_notes,
-          coordinatorNotes: e.coordinator_notes,
-          status: e.status,
-          isRead: Boolean(e.is_read),
-          createdAt: e.created_at
-        }));
+      // 4. Enrollment Requests (Purge dummy seed entries from Supabase & state)
+      const dummyEnrIds = ['SSC-ENR-2026-1001', 'SSC-ENR-2026-1002', 'SSC-ENR-2026-1003'];
+      const dummyStudentNames = ['Abhinav Reddy', 'Samyuktha Rao', 'Charan Teja'];
+      const dummyNotifIds = ['notif-1', 'notif-2', 'notif-3'];
+
+      if (rawEnrollments && rawEnrollments.some(e => dummyEnrIds.includes(e.request_id) || dummyStudentNames.includes(e.student_name))) {
+        try {
+          this.supabaseClient.from('enrollment_requests').delete().in('request_id', dummyEnrIds);
+        } catch (e) {
+          console.warn('Supabase: Purge dummy enrollments error:', e);
+        }
       }
+
+      const realEnrollments = (rawEnrollments || []).filter(e => 
+        !dummyEnrIds.includes(e.request_id) && !dummyStudentNames.includes(e.student_name)
+      );
+
+      window.SSCStore.state.enrollments = realEnrollments.map(e => ({
+        id: Number(e.id),
+        requestId: e.request_id,
+        studentName: e.student_name,
+        requestedClass: e.requested_class,
+        parentName: e.parent_name,
+        fatherName: e.father_name,
+        motherName: e.mother_name,
+        phone: e.phone,
+        email: e.email,
+        schoolName: e.school_name,
+        board: e.board,
+        streamSubject: e.stream_subject,
+        additionalNotes: e.additional_notes,
+        coordinatorNotes: e.coordinator_notes,
+        status: e.status,
+        isRead: Boolean(e.is_read),
+        createdAt: e.created_at
+      }));
 
       // 5. Staff Members
       if (rawStaff.length > 0) {
@@ -311,18 +325,28 @@ class DatabaseService {
         }));
       }
 
-      // 6. Admin Notifications
-      if (rawNotifs.length > 0) {
-        window.SSCStore.state.notifications = rawNotifs.map(n => ({
-          id: n.id,
-          title: n.title,
-          message: n.message,
-          type: n.type,
-          referenceId: n.reference_id,
-          isRead: Boolean(n.is_read),
-          createdAt: n.created_at
-        }));
+      // 6. Admin Notifications (Purge dummy seed alerts)
+      if (rawNotifs && rawNotifs.some(n => dummyNotifIds.includes(n.id) || dummyEnrIds.includes(n.reference_id))) {
+        try {
+          this.supabaseClient.from('admin_notifications').delete().in('id', dummyNotifIds);
+        } catch (e) {
+          console.warn('Supabase: Purge dummy notifications error:', e);
+        }
       }
+
+      const realNotifs = (rawNotifs || []).filter(n =>
+        !dummyNotifIds.includes(n.id) && !dummyEnrIds.includes(n.reference_id)
+      );
+
+      window.SSCStore.state.notifications = realNotifs.map(n => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: n.type,
+        referenceId: n.reference_id,
+        isRead: Boolean(n.is_read),
+        createdAt: n.created_at
+      }));
 
       // 7. Recycle Bin
       if (rawBin.length > 0) {
@@ -855,6 +879,16 @@ class DatabaseService {
   deleteNotification(id) { return window.SSCStore ? window.SSCStore.deleteNotification(id) : false; }
   clearAllNotifications() { return window.SSCStore ? window.SSCStore.clearAllNotifications() : false; }
   clearReadNotifications() { return window.SSCStore ? window.SSCStore.clearReadNotifications() : false; }
+
+  getVisitorStats() {
+    return window.SSCStore ? window.SSCStore.getVisitorStats() : { totalVisits: 0, recentSessions: [] };
+  }
+  recordVisitorSession(session) {
+    return window.SSCStore ? window.SSCStore.recordVisitorSession(session) : null;
+  }
+  updateVisitorTotal(count) {
+    return window.SSCStore ? window.SSCStore.updateVisitorTotal(count) : null;
+  }
 
   getStaff() { return window.SSCStore ? window.SSCStore.getStaff() : []; }
   registerStaff(name, email, phone, role = 'staff') { return window.SSCStore ? window.SSCStore.registerStaff(name, email, phone, role) : null; }
