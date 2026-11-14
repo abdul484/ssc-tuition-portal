@@ -1829,7 +1829,14 @@ class CentralSSCStore {
     if (idx === -1) return false;
 
     const deleted = student.feeHistory.splice(idx, 1)[0];
+    student.paymentStatus = student.feeHistory.length > 0 ? 'Paid' : 'Pending';
     this.saveToStorage();
+
+    if (window.DatabaseService && typeof window.DatabaseService.syncFeeDelete === 'function') {
+      const monthStr = `${deleted.year}-${String(deleted.month).padStart(2, '0')}`;
+      window.DatabaseService.syncFeeDelete(deleted.receiptNo, student.id, monthStr);
+    }
+
     this.emit('FEE_PAYMENT_DELETED', { studentId: student.id, payment: deleted });
     return true;
   }
@@ -2096,6 +2103,69 @@ class CentralSSCStore {
       payment: newPayment,
       monthStatus
     };
+  }
+
+  // Update an existing fee payment record (Amount, Date, Mode, Notes)
+  updateFeePayment(studentId, paymentIdOrReceiptNo, updateData) {
+    const student = this.getStudentById(Number(studentId));
+    if (!student || !Array.isArray(student.feeHistory)) throw new Error('Student not found.');
+
+    let payment = student.feeHistory.find(p => p.id === paymentIdOrReceiptNo || p.receiptNo === paymentIdOrReceiptNo);
+    if (!payment && updateData && updateData.year && updateData.month) {
+      payment = student.feeHistory.find(p => p.year === Number(updateData.year) && p.month === Number(updateData.month));
+    }
+    if (!payment) throw new Error('Payment record not found.');
+
+    if (updateData.amount !== undefined) payment.amount = Number(updateData.amount);
+    if (updateData.date) payment.date = updateData.date;
+    if (updateData.mode) payment.mode = updateData.mode;
+    if (updateData.notes !== undefined) payment.notes = updateData.notes;
+
+    const monthStatus = this.getStudentMonthFee(student.id, payment.year, payment.month);
+    payment.status = monthStatus.status;
+
+    this.saveToStorage();
+
+    if (window.DatabaseService && typeof window.DatabaseService.syncFeeUpdate === 'function') {
+      window.DatabaseService.syncFeeUpdate(payment, student.id);
+    }
+
+    this.emit('PAYMENT_UPDATED', { studentId: student.id, payment, monthStatus });
+    return { success: true, payment, monthStatus };
+  }
+
+  // Reset a student's month fee back to Pending (Unpaid) and purge row from cloud DB
+  resetStudentMonthFee(studentId, year, month) {
+    const student = this.getStudentById(Number(studentId));
+    if (!student || !Array.isArray(student.feeHistory)) throw new Error('Student not found.');
+
+    const numYear = Number(year);
+    const numMonth = Number(month);
+    const monthStr = `${numYear}-${String(numMonth).padStart(2, '0')}`;
+
+    const matchingPayments = student.feeHistory.filter(p => p.year === numYear && p.month === numMonth);
+    if (matchingPayments.length === 0) return { success: true, removedCount: 0 };
+
+    student.feeHistory = student.feeHistory.filter(p => !(p.year === numYear && p.month === numMonth));
+    student.paymentStatus = student.feeHistory.length > 0 ? 'Paid' : 'Pending';
+
+    this.saveToStorage();
+
+    if (window.DatabaseService && typeof window.DatabaseService.syncFeeDelete === 'function') {
+      matchingPayments.forEach(p => {
+        window.DatabaseService.syncFeeDelete(p.receiptNo, student.id, monthStr);
+      });
+    }
+
+    this.addNotification(
+      'Fee Payment Reset',
+      `Tuition fee for ${student.name} (${student.class}) for ${monthStr} was reset to Pending.`,
+      'payment',
+      student.id
+    );
+
+    this.emit('PAYMENT_RESET', { studentId: student.id, year: numYear, month: numMonth });
+    return { success: true, removedCount: matchingPayments.length };
   }
 
   // ========================================================================
@@ -2849,24 +2919,26 @@ class CentralSSCStore {
   }
 
   // WhatsApp Message Generators (Helpline: 8919961354)
-  getWhatsAppReminderUrl(studentId, year, month) {
+  getWhatsAppReminderUrl(studentId, year, month, forcePhone = null) {
     const fee = this.getStudentMonthFee(studentId, year, month);
     if (!fee) return `https://wa.me/91${SSC_OFFICIAL_WHATSAPP}`;
+    const student = this.getStudentById(studentId) || {};
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const monthName = monthNames[month - 1];
-    const parentPhone = (fee.phone || '').replace(/\D/g, '');
+    let phone = (forcePhone || fee.phone || student.phone || '').replace(/\D/g, '');
+    if (phone.length === 12 && phone.startsWith('91')) phone = phone.slice(2);
 
-    const message = `Hello ${fee.parentName || fee.studentName + "'s Parent"},\n\nGreetings from *SSC Students Study Circle*!\nThis is a friendly tuition fee reminder for *${fee.studentName}* (${fee.studentClass}) for *${monthName} ${year}*.\n\n` +
-      `📌 *Monthly Fee:* ₹${fee.monthlyFee}\n` +
-      `✅ *Paid Amount:* ₹${fee.paidAmount}\n` +
-      `⚠️ *Pending Balance:* ₹${fee.balance}\n` +
-      `📅 *Due Date:* ${fee.dueDateDisplay}\n` +
-      `📊 *Status:* ${fee.status}\n\n` +
-      `Kindly clear the pending balance at your earliest convenience via UPI or at the center.\n\n` +
-      `SSC Tuition Center Helpline: ${SSC_OFFICIAL_PHONE_DISPLAY}\nThank you!`;
+    const message = `*STUDENTS STUDY CIRCLE (SSC)*\n*Tuition Fee Reminder*\n------------------------\n` +
+      `Dear Parent/Student,\n` +
+      `*Student:* ${fee.studentName} (${fee.studentClass})\n` +
+      `*Month:* ${monthName} ${year}\n` +
+      `*Pending Balance:* ₹${fee.balance}\n` +
+      `*Due Date:* ${fee.dueDateDisplay}\n` +
+      `------------------------\n` +
+      `Please clear the pending fee at your earliest convenience. Thank you!`;
 
-    const targetPhone = parentPhone.length === 10 ? `91${parentPhone}` : `91${SSC_OFFICIAL_WHATSAPP}`;
+    const targetPhone = phone.length === 10 ? `91${phone}` : `91${SSC_OFFICIAL_WHATSAPP}`;
     return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
   }
 
@@ -2874,17 +2946,20 @@ class CentralSSCStore {
     return this.getWhatsAppReminderUrl(studentId, year, month);
   }
 
-  getWhatsAppReceiptUrl(receiptNo, studentName, studentClass, monthName, amount, date, mode, parentPhone = '') {
-    const cleanPhone = (parentPhone || '').replace(/\D/g, '');
-    const message = `*SSC STUDENTS STUDY CIRCLE*\n*Official Tuition Fee Receipt*\n\n` +
-      `🧾 *Receipt No:* ${receiptNo}\n` +
-      `🎓 *Student Name:* ${studentName} (${studentClass})\n` +
-      `📅 *Fee Month:* ${monthName}\n` +
-      `💰 *Amount Received:* ₹${amount}\n` +
-      `🗓️ *Payment Date:* ${date}\n` +
-      `💳 *Payment Mode:* ${mode}\n` +
-      `✅ *Status:* Verified Paid\n\n` +
-      `Thank you for your prompt payment!\nSSC Students Study Circle • Quality Education from LKG to Class 10\nHelpline: ${SSC_OFFICIAL_PHONE_DISPLAY}`;
+  getWhatsAppReceiptUrl(receiptNo, studentName, studentClass, monthName, amount, date, mode, parentPhone = '', rollNo = '') {
+    let cleanPhone = (parentPhone || '').replace(/\D/g, '');
+    if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) cleanPhone = cleanPhone.slice(2);
+
+    const message = `*STUDENTS STUDY CIRCLE (SSC)*\n*Official Fee Receipt*\n------------------------\n` +
+      `*Receipt No:* ${receiptNo}\n` +
+      `*Student:* ${studentName} (${studentClass})\n` +
+      (rollNo ? `*Roll No:* ${rollNo}\n` : '') +
+      `*Month:* ${monthName}\n` +
+      `*Amount Paid:* ₹${amount}\n` +
+      `*Paid Date:* ${date}\n` +
+      `*Status:* CLEARED ✅\n` +
+      `------------------------\n` +
+      `Thank you for your timely payment!`;
 
     const targetPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : `91${SSC_OFFICIAL_WHATSAPP}`;
     return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;

@@ -975,24 +975,42 @@ function renderFeesManagementTab(container) {
                                 class="btn-3d-tactile-sm px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-semibold" title="Mark student as Continuing">
                           Reactivate
                         </button>
-                      ` : r.balance > 0 ? `
+                      ` : r.balance <= 0 ? `
+                        <span class="text-xs text-emerald-700 font-semibold mr-1">✓ Cleared</span>
+                        <button onclick="openEditPaymentModal(${r.studentId}, ${year}, ${month})"
+                                class="btn-3d-tactile-sm px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[11px] font-semibold" title="Edit payment or reset to pending">
+                          Edit / Reset
+                        </button>
+                        <button onclick="handleLedgerWhatsApp(${r.studentId}, ${year}, ${month})"
+                                class="btn-3d-tactile-sm px-2 py-1 rounded-lg bg-green-50 hover:bg-green-100 text-green-800 border border-green-200 text-[11px] font-semibold" title="Send WhatsApp Receipt">
+                          WhatsApp
+                        </button>
+                        <button onclick="viewLatestReceiptForMonth(${r.studentId}, ${year}, ${month})"
+                                class="btn-3d-tactile-sm px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-brand-dark text-[11px] font-medium" title="View & Print Receipt">
+                          Receipt
+                        </button>
+                      ` : `
                         <button onclick="openRecordPaymentModal(${r.studentId}, ${year}, ${month}, ${r.balance})"
                                 class="btn-3d-tactile-sm px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-semibold" title="Pay balance">
                           Pay Balance
                         </button>
-                        <a href="${reminderUrl}" target="_blank"
-                           class="btn-3d-tactile-sm inline-block px-2.5 py-1 rounded-lg bg-green-50 hover:bg-green-100 text-green-800 text-[11px] font-semibold" title="Send WhatsApp Reminder">
+                        ${r.paidAmount > 0 ? `
+                          <button onclick="openEditPaymentModal(${r.studentId}, ${year}, ${month})"
+                                  class="btn-3d-tactile-sm px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[11px] font-semibold" title="Edit payment or reset to pending">
+                            Edit
+                          </button>
+                        ` : ''}
+                        <button onclick="handleLedgerWhatsApp(${r.studentId}, ${year}, ${month})"
+                                class="btn-3d-tactile-sm px-2 py-1 rounded-lg bg-green-50 hover:bg-green-100 text-green-800 border border-green-200 text-[11px] font-semibold" title="Send WhatsApp Reminder">
                           WhatsApp
-                        </a>
-                      ` : `
-                        <span class="text-xs text-emerald-700 font-semibold mr-1">✓ Cleared</span>
-                      `}
-                      ${r.paidAmount > 0 ? `
-                        <button onclick="viewLatestReceiptForMonth(${r.studentId}, ${year}, ${month})"
-                                class="btn-3d-tactile-sm px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-brand-dark text-[11px] font-medium" title="View Receipt">
-                          Receipt
                         </button>
-                      ` : ''}
+                        ${r.paidAmount > 0 ? `
+                          <button onclick="viewLatestReceiptForMonth(${r.studentId}, ${year}, ${month})"
+                                  class="btn-3d-tactile-sm px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-brand-dark text-[11px] font-medium" title="View & Print Receipt">
+                            Receipt
+                          </button>
+                        ` : ''}
+                      `}
                     </td>
                   </tr>
                 `;
@@ -1094,6 +1112,88 @@ window.viewLatestReceiptForMonth = function(studentId, year, month) {
     lastTx.mode,
     student.phone
   );
+};
+
+window.handleLedgerWhatsApp = function(studentId, year, month) {
+  const student = window.SSCStore ? window.SSCStore.getStudentById(Number(studentId)) : null;
+  if (!student) {
+    showGlobalToast('Student record not found.', false);
+    return;
+  }
+
+  // Extract & normalize 10-digit Indian mobile number
+  let phone = (student.phone || '').replace(/\D/g, '');
+  if (phone.length === 12 && phone.startsWith('91')) phone = phone.slice(2);
+
+  const isValidPhone = /^[6-9]\d{9}$/.test(phone);
+  if (!isValidPhone) {
+    const input = prompt(
+      `Enter valid 10-digit Indian mobile number for ${student.name} (starting with 6, 7, 8, or 9):`,
+      phone && phone !== '0000000000' ? phone : ''
+    );
+    if (!input) return; // User cancelled prompt
+
+    const cleanInput = input.replace(/\D/g, '').slice(-10);
+    if (!/^[6-9]\d{9}$/.test(cleanInput)) {
+      alert('Invalid mobile number. Must be a 10-digit Indian number starting with 6, 7, 8, or 9.');
+      return;
+    }
+    phone = cleanInput;
+    student.phone = phone;
+
+    // Persist updated phone number in localStorage and Supabase
+    if (typeof window.SSCStore.saveToStorage === 'function') {
+      window.SSCStore.saveToStorage();
+    }
+    if (window.DatabaseService && typeof window.DatabaseService.syncStudentUpdate === 'function') {
+      window.DatabaseService.syncStudentUpdate(student.id, { phone: phone });
+    }
+    showGlobalToast(`Updated contact phone for ${student.name} to ${phone}`, true);
+  }
+
+  const feeData = window.SSCStore.getStudentMonthFee(student.id, year, month);
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthStr = `${monthNames[month - 1]} ${year}`;
+  const rollNo = student.rollNo || student.roll_no || `SSC-${String(student.id).padStart(3, '0')}`;
+
+  let message = '';
+  // Check if month is Paid / Cleared
+  if (feeData && feeData.balance <= 0 && feeData.paidAmount > 0) {
+    const lastTx = (feeData.transactions && feeData.transactions.length > 0)
+      ? feeData.transactions[feeData.transactions.length - 1]
+      : ((student.feeHistory || []).find(p => p.year === year && p.month === month) || {});
+    const receiptNo = lastTx.receiptNo || `REC-${year}${String(month).padStart(2, '0')}-${String(student.id).padStart(3, '0')}`;
+    const rawDate = lastTx.date || new Date().toISOString().split('T')[0];
+    const displayDate = typeof window.formatISODateDisplay === 'function' ? window.formatISODateDisplay(rawDate) : rawDate;
+    const amountPaid = feeData.paidAmount;
+
+    message = `*STUDENTS STUDY CIRCLE (SSC)*\n*Official Fee Receipt*\n------------------------\n` +
+      `*Receipt No:* ${receiptNo}\n` +
+      `*Student:* ${student.name} (${student.class})\n` +
+      `*Roll No:* ${rollNo}\n` +
+      `*Month:* ${monthStr}\n` +
+      `*Amount Paid:* ₹${amountPaid}\n` +
+      `*Paid Date:* ${displayDate}\n` +
+      `*Status:* CLEARED ✅\n` +
+      `------------------------\n` +
+      `Thank you for your timely payment!`;
+  } else {
+    // Pending / Partial
+    const balance = feeData ? feeData.balance : student.monthlyFee;
+    const dueDate = feeData ? feeData.dueDateDisplay : `10th ${monthStr}`;
+
+    message = `*STUDENTS STUDY CIRCLE (SSC)*\n*Tuition Fee Reminder*\n------------------------\n` +
+      `Dear Parent/Student,\n` +
+      `*Student:* ${student.name} (${student.class})\n` +
+      `*Month:* ${monthStr}\n` +
+      `*Pending Balance:* ₹${balance}\n` +
+      `*Due Date:* ${dueDate}\n` +
+      `------------------------\n` +
+      `Please clear the pending fee at your earliest convenience. Thank you!`;
+  }
+
+  const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`;
+  window.open(waUrl, '_blank');
 };
 
 // ==========================================================================

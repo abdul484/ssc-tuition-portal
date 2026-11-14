@@ -299,18 +299,77 @@ body {
   scrollbar-width: none;
 }
 
-/* Print Styles for Fee Receipts */
+/* Print Styles for Fee Receipts (Strict Single-Page A4) */
+@page {
+  size: A4 portrait;
+  margin: 10mm;
+}
+
 @media print {
-  body {
+  html, body {
     background: #FFF !important;
     color: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
-  header, footer, nav, .no-print {
+  
+  /* Suppress all website DOM elements during print */
+  header, footer, nav, aside, main, #site-header, #site-footer, #main-content,
+  #view-home, #view-classes, #view-books, #view-students, #view-enrollment, #view-admin,
+  .no-print, #admin-student-modal, #admin-payment-modal, #admin-book-modal,
+  #admin-class-modal, #admin-enrollment-modal, #admin-recycle-modal {
     display: none !important;
   }
+
+  /* Make receipt modal flat and isolated */
+  #admin-receipt-modal {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  #admin-receipt-modal > div {
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+  }
+
+  /* Hide close, print buttons and modal footer */
+  #admin-receipt-modal button,
+  #admin-receipt-modal a,
+  #admin-receipt-modal .border-t,
+  #admin-receipt-modal .border-b {
+    display: none !important;
+  }
+
+  /* Constrain receipt card strictly to 1 single page */
+  #printable-receipt-card {
+    display: block !important;
+    max-width: 650px !important;
+    margin: 10px auto !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+    max-height: 95vh !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
   .print-area {
     display: block !important;
     width: 100% !important;
+    page-break-inside: avoid !important;
   }
 }
 

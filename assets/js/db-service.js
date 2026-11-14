@@ -488,11 +488,41 @@ class DatabaseService {
     }
   }
 
-  async syncFeeDelete(receiptNo) {
+  async syncFeeUpdate(payment, studentId) {
     if (!this.isSupabaseConnected()) return;
     try {
-      const { error } = await this.supabaseClient.from('fee_records').delete().eq('receipt_no', receiptNo);
-      if (error) this.notifyQueryError('fee_records', error, 'delete');
+      const monthStr = payment.monthString || `${payment.year}-${String(payment.month).padStart(2, '0')}`;
+      const payload = {
+        amount: Number(payment.amount),
+        payment_date: payment.date || new Date().toISOString().split('T')[0],
+        mode: payment.mode || 'Cash',
+        status: payment.status || 'Full Paid',
+        notes: payment.notes || ''
+      };
+
+      let res;
+      if (payment.receiptNo) {
+        res = await this.supabaseClient.from('fee_records').update(payload).eq('receipt_no', payment.receiptNo);
+      } else {
+        res = await this.supabaseClient.from('fee_records').update(payload).eq('student_id', Number(studentId)).eq('month', monthStr);
+      }
+      if (res && res.error) this.notifyQueryError('fee_records', res.error, 'update');
+    } catch (e) {
+      this.notifyQueryError('fee_records', e, 'update');
+    }
+  }
+
+  async syncFeeDelete(receiptNo, studentId = null, monthStr = null) {
+    if (!this.isSupabaseConnected()) return;
+    try {
+      if (receiptNo) {
+        const { error } = await this.supabaseClient.from('fee_records').delete().eq('receipt_no', receiptNo);
+        if (error) this.notifyQueryError('fee_records', error, 'delete');
+      }
+      if (studentId && monthStr) {
+        const { error } = await this.supabaseClient.from('fee_records').delete().eq('student_id', Number(studentId)).eq('month', monthStr);
+        if (error && !receiptNo) this.notifyQueryError('fee_records', error, 'delete');
+      }
     } catch (e) {
       this.notifyQueryError('fee_records', e, 'delete');
     }

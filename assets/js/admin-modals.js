@@ -308,8 +308,29 @@ function openRecordPaymentModal(preselectedStudentId = null, year = 2026, month 
   activePaymentTarget = {
     studentId: preselectedStudentId ? Number(preselectedStudentId) : null,
     year: currentYear,
-    month: currentMonth
+    month: currentMonth,
+    paymentId: null,
+    receiptNo: null,
+    isEditing: false
   };
+
+  studentSelect.disabled = false;
+  const monthSelect = document.getElementById('apm-month-select');
+  if (monthSelect) monthSelect.disabled = false;
+  const yearSelect = document.getElementById('apm-year-select');
+  if (yearSelect) yearSelect.disabled = false;
+
+  const modalTitle = document.querySelector('#admin-payment-modal h3');
+  if (modalTitle) modalTitle.textContent = 'Record Tuition Fee Payment';
+
+  const modalSubtitle = document.querySelector('#admin-payment-modal p');
+  if (modalSubtitle) modalSubtitle.textContent = 'Issues an official verified tuition fee receipt.';
+
+  const submitBtn = document.querySelector('#admin-payment-form button[type="submit"]');
+  if (submitBtn) submitBtn.textContent = 'Record Payment & Generate Receipt';
+
+  const resetBtn = document.getElementById('apm-reset-btn');
+  if (resetBtn) resetBtn.classList.add('hidden');
 
   const students = window.SSCStore ? window.SSCStore.getStudents().filter(s => s.status === 'active') : [];
   studentSelect.innerHTML = students.map(s => `
@@ -326,7 +347,6 @@ function openRecordPaymentModal(preselectedStudentId = null, year = 2026, month 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const monthName = monthNames[currentMonth - 1];
 
-  const monthSelect = document.getElementById('apm-month-select');
   if (monthSelect) monthSelect.value = String(currentMonth);
 
   populateApmYearSelect(currentYear);
@@ -336,6 +356,12 @@ function openRecordPaymentModal(preselectedStudentId = null, year = 2026, month 
 
   const dateInput = document.getElementById('apm-date');
   if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
+  const modeSelect = document.getElementById('apm-mode');
+  if (modeSelect) modeSelect.value = 'Cash';
+
+  const notesInput = document.getElementById('apm-notes');
+  if (notesInput) notesInput.value = '';
 
   // Calculate default amount to pay (remaining balance for this month)
   updatePaymentModalDetails(customAmount);
@@ -349,6 +375,127 @@ function openRecordPaymentModal(preselectedStudentId = null, year = 2026, month 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
 }
+
+// Open modal in Edit / Reset mode for Cleared or Partial month
+function openEditPaymentModal(studentId, year = 2026, month = null) {
+  const modal = document.getElementById('admin-payment-modal');
+  const studentSelect = document.getElementById('apm-student-select');
+  if (!modal || !studentSelect) return;
+
+  const currentYear = year || (window.currentLedgerYear || 2026);
+  const currentMonth = month || (window.currentLedgerMonth || (new Date().getMonth() + 1));
+  const student = window.SSCStore ? window.SSCStore.getStudentById(Number(studentId)) : null;
+  if (!student) return;
+
+  const feeData = window.SSCStore.getStudentMonthFee(student.id, currentYear, currentMonth);
+  const payment = (student.feeHistory || []).find(p => p.year === currentYear && p.month === currentMonth)
+    || (feeData && feeData.payments && feeData.payments[0])
+    || null;
+
+  activePaymentTarget = {
+    studentId: student.id,
+    year: currentYear,
+    month: currentMonth,
+    paymentId: payment ? payment.id : null,
+    dbId: payment ? payment.dbId : null,
+    receiptNo: payment ? payment.receiptNo : null,
+    isEditing: true
+  };
+
+  // Populate and lock student select
+  studentSelect.innerHTML = `<option value="${student.id}" selected>${student.name} (${student.class}) • Monthly: ₹${student.monthlyFee}</option>`;
+  studentSelect.disabled = true;
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthName = monthNames[currentMonth - 1];
+
+  const monthSelect = document.getElementById('apm-month-select');
+  if (monthSelect) {
+    monthSelect.value = String(currentMonth);
+    monthSelect.disabled = true;
+  }
+
+  populateApmYearSelect(currentYear);
+  const yearSelect = document.getElementById('apm-year-select');
+  if (yearSelect) {
+    yearSelect.value = String(currentYear);
+    yearSelect.disabled = true;
+  }
+
+  const monthInput = document.getElementById('apm-month');
+  if (monthInput) monthInput.value = `${monthName} ${currentYear}`;
+
+  const amountInput = document.getElementById('apm-amount');
+  if (amountInput) amountInput.value = payment ? payment.amount : (feeData ? feeData.paidAmount : student.monthlyFee);
+
+  const dateInput = document.getElementById('apm-date');
+  if (dateInput) dateInput.value = payment ? payment.date : new Date().toISOString().split('T')[0];
+
+  const modeSelect = document.getElementById('apm-mode');
+  if (modeSelect) modeSelect.value = payment ? (payment.mode || 'Cash') : 'Cash';
+
+  const notesInput = document.getElementById('apm-notes');
+  if (notesInput) notesInput.value = payment ? (payment.notes || '') : '';
+
+  const balanceNote = document.getElementById('apm-balance-note');
+  if (balanceNote) {
+    balanceNote.innerHTML = `
+      <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs space-y-1 mt-2">
+        <div class="flex justify-between font-bold text-emerald-900">
+          <span>Current Payment Status:</span>
+          <span>${feeData ? feeData.status : 'Paid'}</span>
+        </div>
+        <div class="flex justify-between text-emerald-800">
+          <span>Recorded Receipt No:</span>
+          <strong class="font-mono">${payment?.receiptNo || '—'}</strong>
+        </div>
+        <div class="flex justify-between text-stone-600">
+          <span>Monthly Tuition Rate:</span>
+          <strong>₹${student.monthlyFee}</strong>
+        </div>
+      </div>
+    `;
+  }
+
+  const modalTitle = document.querySelector('#admin-payment-modal h3');
+  if (modalTitle) modalTitle.textContent = 'Edit Fee Payment / Reset Dues';
+
+  const modalSubtitle = document.querySelector('#admin-payment-modal p');
+  if (modalSubtitle) modalSubtitle.textContent = `Modify amount/mode or reset ${monthName} ${currentYear} dues back to Pending.`;
+
+  const submitBtn = document.querySelector('#admin-payment-form button[type="submit"]');
+  if (submitBtn) submitBtn.textContent = 'Update Payment';
+
+  const resetBtn = document.getElementById('apm-reset-btn');
+  if (resetBtn) resetBtn.classList.remove('hidden');
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+window.openEditPaymentModal = openEditPaymentModal;
+
+function handleResetPaymentToPending() {
+  if (!activePaymentTarget || !activePaymentTarget.studentId) return;
+  const student = window.SSCStore ? window.SSCStore.getStudentById(activePaymentTarget.studentId) : null;
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthName = monthNames[(activePaymentTarget.month || 1) - 1];
+
+  const confirmMsg = `Reset Fee to Pending (Unpaid)?\n\nStudent: ${student ? student.name : 'Student'}\nMonth: ${monthName} ${activePaymentTarget.year}\n\n⚠️ This will delete this month's payment record from the local ledger and Supabase cloud database, returning this month's status back to Pending.`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    window.SSCStore.resetStudentMonthFee(activePaymentTarget.studentId, activePaymentTarget.year, activePaymentTarget.month);
+    closeRecordPaymentModal();
+    showGlobalToast(`Reset ${monthName} fee to Pending for ${student ? student.name : 'Student'}. Record deleted from database.`, true);
+    const container = document.getElementById('admin-tab-content-area');
+    if (container && window.renderFeesManagementTab) {
+      window.renderFeesManagementTab(container);
+    }
+  } catch (err) {
+    showGlobalToast(err.message, false);
+  }
+}
+window.handleResetPaymentToPending = handleResetPaymentToPending;
 
 function updatePaymentModalDetails(forceAmount = null) {
   if (!activePaymentTarget.studentId) return;
@@ -411,6 +558,31 @@ function handleSavePaymentForm(e) {
   }
 
   try {
+    if (activePaymentTarget.isEditing) {
+      const targetIdentifier = activePaymentTarget.paymentId || activePaymentTarget.receiptNo;
+      window.SSCStore.updateFeePayment(studentId, targetIdentifier, {
+        amount,
+        date,
+        mode,
+        notes,
+        year: activePaymentTarget.year,
+        month: activePaymentTarget.month
+      });
+
+      closeRecordPaymentModal();
+
+      const student = window.SSCStore.getStudentById(studentId);
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthName = monthNames[activePaymentTarget.month - 1];
+
+      showGlobalToast(`Updated fee payment for ${student.name} (${monthName} ${activePaymentTarget.year}).`, true);
+      const container = document.getElementById('admin-tab-content-area');
+      if (container && window.renderFeesManagementTab) {
+        window.renderFeesManagementTab(container);
+      }
+      return;
+    }
+
     const result = window.SSCStore.recordFeePayment(
       studentId,
       activePaymentTarget.year,
@@ -428,6 +600,12 @@ function handleSavePaymentForm(e) {
     const monthName = monthNames[activePaymentTarget.month - 1];
 
     showGlobalToast(`Recorded ₹${amount} for ${student.name} (${result.monthStatus.status}). Receipt: ${result.receiptNo}`, true);
+
+    // Refresh ledger table immediately
+    const container = document.getElementById('admin-tab-content-area');
+    if (container && window.renderFeesManagementTab) {
+      window.renderFeesManagementTab(container);
+    }
 
     // Offer instant receipt preview
     printReceiptPreview(
@@ -513,6 +691,149 @@ function closeReceiptModal() {
     modal.classList.remove('flex');
   }
 }
+
+// Dedicated single-page isolated A4 receipt printing
+function printOfficialReceipt() {
+  const receiptCard = document.getElementById('printable-receipt-card');
+  if (!receiptCard) {
+    window.print();
+    return;
+  }
+
+  // Create or reuse hidden iframe for isolated single-page printing
+  let iframe = document.getElementById('receipt-print-frame');
+  if (!iframe) {
+    iframe = document.createElement('iframe');
+    iframe.id = 'receipt-print-frame';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+  }
+
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+  iframeDoc.open();
+  iframeDoc.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Official Tuition Fee Receipt - Students Study Circle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      color: #261710;
+      height: auto;
+      overflow: hidden;
+    }
+    .print-wrapper {
+      width: 100%;
+      max-width: 650px;
+      margin: 10px auto;
+      page-break-inside: avoid !important;
+      page-break-after: avoid !important;
+      page-break-before: avoid !important;
+      max-height: 95vh;
+      overflow: hidden;
+    }
+    #printable-receipt-card {
+      border: 2px solid #261710 !important;
+      border-radius: 16px !important;
+      padding: 24px !important;
+      background: #FAF7F2 !important;
+      color: #261710 !important;
+      box-shadow: none !important;
+    }
+    .border-2 { border-width: 2px; }
+    .border-brand-dark { border-color: #261710; }
+    .p-6 { padding: 24px; }
+    .rounded-2xl { border-radius: 16px; }
+    .bg-\\[\\#FAF7F2\\] { background-color: #FAF7F2 !important; }
+    .text-brand-dark { color: #261710 !important; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .pb-4 { padding-bottom: 16px; }
+    .border-b-2 { border-bottom: 2px solid #261710; }
+    .border-b { border-bottom: 1px solid #ECE2D2; }
+    .gap-3 { gap: 12px; }
+    .w-12 { width: 48px; }
+    .h-12 { height: 48px; }
+    .object-contain { object-fit: contain; }
+    .font-serif { font-family: 'Cinzel', serif; }
+    .font-black { font-weight: 900; }
+    .text-xl { font-size: 20px; }
+    .leading-none { line-height: 1; }
+    .text-\\[10px\\] { font-size: 10px; }
+    .text-brand-muted { color: #705E53 !important; }
+    .tracking-widest { letter-spacing: 0.1em; }
+    .uppercase { text-transform: uppercase; }
+    .mt-0\\.5 { margin-top: 2px; }
+    .font-bold { font-weight: 700; }
+    .text-right { text-align: right; }
+    .text-xs { font-size: 12px; }
+    .block { display: block; }
+    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .text-sm { font-size: 14px; }
+    .grid { display: grid; }
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gap-4 { gap: 16px; }
+    .my-6 { margin-top: 24px; margin-bottom: 24px; }
+    .p-4 { padding: 16px; }
+    .bg-white { background-color: #ffffff !important; }
+    .rounded-xl { border-radius: 12px; }
+    .border { border: 1px solid #E8DEC8; }
+    .my-4 { margin-top: 16px; margin-bottom: 16px; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .text-2xl { font-size: 24px; }
+    .mt-6 { margin-top: 24px; }
+    .pt-4 { padding-top: 16px; }
+    .border-t { border-top: 1px solid #E8DEC8; }
+    .text-\\[11px\\] { font-size: 11px; }
+    .text-emerald-800 { color: #065f46 !important; }
+    .bg-emerald-100 { background-color: #d1fae5 !important; }
+    .px-2 { padding-left: 8px; padding-right: 8px; }
+    .py-0\\.5 { padding-top: 2px; padding-bottom: 2px; }
+    .rounded-full { border-radius: 9999px; }
+  </style>
+</head>
+<body>
+  <div class="print-wrapper">
+    ${receiptCard.outerHTML}
+  </div>
+</body>
+</html>`);
+  iframeDoc.close();
+
+  setTimeout(() => {
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (e) {
+      console.warn('Iframe print error, falling back to window.print():', e);
+      window.print();
+    }
+  }, 250);
+}
+window.printOfficialReceipt = printOfficialReceipt;
 
 // ==========================================================================
 // 5. STRUCTURED ADD / EDIT BOOK MODAL
