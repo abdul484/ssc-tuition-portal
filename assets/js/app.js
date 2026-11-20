@@ -1354,9 +1354,13 @@ window.openStudentModal = function(studentId) {
     ? window.formatISODateDisplay(student.joiningDate)
     : student.joiningDate;
 
+  const rawAdvDate = student.advanceDate 
+    || (student.feeHistory && student.feeHistory[0] ? student.feeHistory[0].date : null) 
+    || student.joiningDate;
+
   const formattedAdvanceDate = (window.formatISODateDisplay && typeof window.formatISODateDisplay === 'function')
-    ? window.formatISODateDisplay(student.advanceDate || student.joiningDate)
-    : (student.advanceDate || student.joiningDate);
+    ? window.formatISODateDisplay(rawAdvDate)
+    : rawAdvDate;
 
   if (name) name.textContent = student.name;
   if (avatar) avatar.textContent = student.name.charAt(0);
@@ -1368,24 +1372,24 @@ window.openStudentModal = function(studentId) {
   if (advancePaidEl) advancePaidEl.textContent = `₹${Number(student.advanceAmount || 0).toLocaleString()}`;
   if (advanceDateEl) advanceDateEl.textContent = Number(student.advanceAmount || 0) > 0 ? formattedAdvanceDate : '—';
 
-  // Generate month-by-month ledger starting from joining_date up to current month
+  // Generate month-by-month ledger starting directly from student's joining month up to current month
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1; // 1 to 12
 
   // Determine starting month and year from joiningDate
-  let startYear = currentYear;
-  let startMonth = 1;
+  let jYear = currentYear;
+  let jMonth = 1;
   if (student.joiningDate) {
     if (student.joiningDate.includes('-')) {
       const parts = student.joiningDate.split('-').map(Number);
-      startYear = parts[0] || currentYear;
-      startMonth = parts[1] || 1;
+      jYear = parts[0] || currentYear;
+      jMonth = parts[1] || 1;
     } else {
       const d = new Date(student.joiningDate);
       if (!isNaN(d.getTime())) {
-        startYear = d.getFullYear();
-        startMonth = d.getMonth() + 1;
+        jYear = d.getFullYear();
+        jMonth = d.getMonth() + 1;
       }
     }
   }
@@ -1395,8 +1399,9 @@ window.openStudentModal = function(studentId) {
   let totalPaidSum = 0;
   let totalDueSum = 0;
 
-  let y = startYear;
-  let m = startMonth;
+  // Start directly from the student's joining month (omitting pre-joining months)
+  let y = jYear;
+  let m = jMonth;
   const monthlyFee = Number(student.monthlyFee || 1200);
 
   while (y < currentYear || (y === currentYear && m <= currentMonth)) {
@@ -1415,7 +1420,7 @@ window.openStudentModal = function(studentId) {
       const paidForMonth = monthPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
       const latestPayment = monthPayments[monthPayments.length - 1];
       const paidDate = latestPayment.date ? ((window.formatISODateDisplay) ? window.formatISODateDisplay(latestPayment.date) : latestPayment.date) : '—';
-      const mode = latestPayment.mode || 'UPI';
+      const mode = latestPayment.mode || 'Cash';
       const balance = Math.max(0, monthlyFee - paidForMonth);
 
       totalPaidSum += paidForMonth;
@@ -1437,7 +1442,7 @@ window.openStudentModal = function(studentId) {
         isCurrentMonth: (y === currentYear && m === currentMonth)
       });
     } else {
-      // Unpaid month up to current month
+      // Unpaid month after joining
       totalDueSum += monthlyFee;
       const statusBadge = `<span class="badge-3d-unpaid inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold">Unpaid</span>`;
 

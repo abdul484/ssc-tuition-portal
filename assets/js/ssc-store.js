@@ -1594,7 +1594,7 @@ class CentralSSCStore {
           joiningDate: s.joining_date ? String(s.joining_date).split('T')[0] : '2026-06-01',
           monthlyFee: Number(s.monthly_fee) || 0,
           advanceAmount: Number(s.advance_amount) || 0,
-          advanceDate: s.advance_date ? String(s.advance_date).split('T')[0] : null,
+          advanceDate: s.advance_date ? String(s.advance_date).split('T')[0] : (studentFees.length > 0 && studentFees[0].date ? studentFees[0].date : null),
           status: s.status || 'active',
           paymentStatus: studentFees.length > 0 ? 'Paid' : 'Pending',
           notes: s.notes || '',
@@ -1650,6 +1650,14 @@ class CentralSSCStore {
 
     const monthlyFee = Number(studentData.monthlyFee) || 1200;
     const advanceAmount = Number(studentData.advanceAmount) || 0;
+    let isoAdvanceDate = studentData.advanceDate;
+    if (advanceAmount > 0) {
+      if (!isoAdvanceDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoAdvanceDate)) {
+        isoAdvanceDate = isoJoiningDate;
+      }
+    } else {
+      isoAdvanceDate = null;
+    }
 
     const newStudent = {
       id: nextId,
@@ -1662,25 +1670,29 @@ class CentralSSCStore {
       joiningDate: isoJoiningDate,
       monthlyFee,
       advanceAmount,
+      advanceDate: isoAdvanceDate,
       notes: (studentData.notes || '').trim(),
-      status: 'active',
+      status: studentData.status || 'active',
       feeHistory: []
     };
 
-    // If advance amount was paid at joining, record initial payment transaction
+    // If advance amount was paid at joining, record initial payment transaction using advanceDate
     if (advanceAmount > 0) {
       const [jYear, jMonth] = isoJoiningDate.split('-').map(Number);
-      const receiptNo = `REC-${jYear}${String(jMonth).padStart(2, '0')}-${String(Math.floor(100 + Math.random() * 900))}`;
+      const receiptNo = `REC-${jYear}${String(jMonth).padStart(2, '0')}-${String(nextId).padStart(3, '0')}`;
+      const statusStr = advanceAmount >= monthlyFee ? 'Full Paid' : 'Half Paid';
       newStudent.feeHistory.push({
         id: `PAY-${Date.now()}`,
         receiptNo,
         year: jYear,
         month: jMonth,
         amount: advanceAmount,
-        date: isoJoiningDate,
+        date: isoAdvanceDate,
         mode: 'Cash',
+        status: statusStr,
         notes: 'Advance tuition fee credited at enrollment'
       });
+      newStudent.paymentStatus = 'Paid';
     }
 
     this.state.students.unshift(newStudent);
@@ -1689,7 +1701,8 @@ class CentralSSCStore {
     if (window.DatabaseService) {
       window.DatabaseService.syncStudentInsert(newStudent);
       if (advanceAmount > 0 && newStudent.feeHistory && newStudent.feeHistory.length > 0) {
-        window.DatabaseService.syncFeeInsert(newStudent.feeHistory[0], newStudent.id, 'Full Paid');
+        const statusStr = advanceAmount >= monthlyFee ? 'Full Paid' : 'Half Paid';
+        window.DatabaseService.syncFeeInsert(newStudent.feeHistory[0], newStudent.id, statusStr);
       }
     }
 
@@ -1727,11 +1740,49 @@ class CentralSSCStore {
       student.joiningDate = fields.joiningDate;
     }
 
+    if (fields.advanceDate !== undefined) {
+      student.advanceDate = fields.advanceDate;
+    }
+
     if (fields.monthlyFee !== undefined) {
       student.monthlyFee = Math.max(0, Number(fields.monthlyFee));
     }
     if (fields.advanceAmount !== undefined) {
       student.advanceAmount = Math.max(0, Number(fields.advanceAmount));
+    }
+
+    // Keep initial advance fee payment in sync
+    if (student.advanceAmount > 0 && student.joiningDate) {
+      const [jYear, jMonth] = student.joiningDate.split('-').map(Number);
+      const existingPay = (student.feeHistory || []).find(p => p.year === jYear && p.month === jMonth);
+      if (existingPay) {
+        existingPay.amount = student.advanceAmount;
+        if (student.advanceDate) existingPay.date = student.advanceDate;
+        existingPay.status = student.advanceAmount >= student.monthlyFee ? 'Full Paid' : 'Half Paid';
+        if (window.DatabaseService) {
+          window.DatabaseService.syncFeeUpdate(existingPay, student.id);
+        }
+      } else {
+        const receiptNo = `REC-${jYear}${String(jMonth).padStart(2, '0')}-${String(student.id).padStart(3, '0')}`;
+        const statusStr = student.advanceAmount >= student.monthlyFee ? 'Full Paid' : 'Half Paid';
+        const newPay = {
+          id: `PAY-${Date.now()}`,
+          receiptNo,
+          year: jYear,
+          month: jMonth,
+          amount: student.advanceAmount,
+          date: student.advanceDate || student.joiningDate,
+          mode: 'Cash',
+          status: statusStr,
+          notes: 'Advance tuition fee credited at enrollment'
+        };
+        if (!student.feeHistory) student.feeHistory = [];
+        student.feeHistory.push(newPay);
+        student.paymentStatus = 'Paid';
+        if (window.DatabaseService) {
+          window.DatabaseService.syncFeeInsert(newPay, student.id, statusStr);
+        }
+      }
     }
 
     if (fields.status !== undefined) {
@@ -1901,6 +1952,43 @@ class CentralSSCStore {
     const paidAmount = monthPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
     const regularMonthlyFee = Number(student.monthlyFee || 0);
 
+    // Check if the target month is strictly earlier than student's joining year-month
+    const isPreJoining = Boolean(
+      jYear && jMonth && (year < jYear || (year === jYear && month < jMonth))
+    );
+
+    // If pre-joining and no payment was made, mark as Not Joined (₹0 fee, ₹0 balance)
+    if (isPreJoining && paidAmount === 0) {
+      return {
+        studentId: student.id,
+        studentName: student.name,
+        name: student.name,
+        studentClass: student.class,
+        class: student.class,
+        school: student.school || '',
+        rollNo: student.rollNo || `SSC-${student.id}`,
+        parentName: student.parentName || student.fatherName || '',
+        phone: student.phone || '',
+        year,
+        month,
+        monthlyFee: 0,
+        regularMonthlyFee,
+        dueDay,
+        dueDate: '—',
+        dueDateDisplay: '—',
+        paidAmount: 0,
+        balance: 0,
+        status: 'Not Joined',
+        paidDate: '—',
+        paidDateDisplay: '—',
+        isNotJoined: true,
+        isDiscontinued: false,
+        payments: [],
+        transactions: [],
+        latestReceiptNo: null
+      };
+    }
+
     // If student is discontinued and has no payment recorded for this month,
     // stop generating new monthly pending fee dues for them
     if (isDiscontinued && paidAmount === 0) {
@@ -1926,6 +2014,7 @@ class CentralSSCStore {
         status: 'Discontinued',
         paidDate: '—',
         paidDateDisplay: '—',
+        isNotJoined: false,
         isDiscontinued: true,
         payments: [],
         transactions: [],
@@ -2003,10 +2092,13 @@ class CentralSSCStore {
     let halfPaidCount = 0;
     let pendingCount = 0;
     let discontinuedCount = 0;
+    let notJoinedCount = 0;
 
     records.forEach(r => {
       if (r.status === 'Discontinued' || r.isDiscontinued) {
         discontinuedCount++;
+      } else if (r.status === 'Not Joined' || r.isNotJoined) {
+        notJoinedCount++;
       } else {
         expectedTotal += r.monthlyFee;
         collectedTotal += r.paidAmount;
@@ -2032,7 +2124,7 @@ class CentralSSCStore {
       records: enrichedRecords,
       rows: enrichedRecords,
       summary: {
-        totalEligibleStudents: records.length,
+        totalEligibleStudents: records.length - discontinuedCount - notJoinedCount,
         totalStudents: records.length,
         expectedTotal,
         expectedFee: expectedTotal,
@@ -2043,7 +2135,8 @@ class CentralSSCStore {
         fullPaidCount,
         halfPaidCount,
         pendingCount,
-        discontinuedCount
+        discontinuedCount,
+        notJoinedCount
       }
     };
   }

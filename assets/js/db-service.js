@@ -240,7 +240,7 @@ class DatabaseService {
             joiningDate: s.joining_date ? String(s.joining_date).split('T')[0] : '2026-06-01',
             monthlyFee: Number(s.monthly_fee) || 0,
             advanceAmount: Number(s.advance_amount) || 0,
-            advanceDate: s.advance_date ? String(s.advance_date).split('T')[0] : null,
+            advanceDate: s.advance_date ? String(s.advance_date).split('T')[0] : (studentFees.length > 0 && studentFees[0].date ? studentFees[0].date : null),
             status: s.status || 'active',
             paymentStatus: studentFees.length > 0 ? 'Paid' : 'Pending',
             notes: s.notes || '',
@@ -413,7 +413,7 @@ class DatabaseService {
         joining_date: student.joiningDate || new Date().toISOString().split('T')[0],
         monthly_fee: Number(student.monthlyFee) || 0,
         advance_amount: Number(student.advanceAmount) || 0,
-        advance_date: student.advanceDate || student.joiningDate || null,
+        advance_date: student.advanceDate || null,
         status: student.status || 'active',
         notes: student.notes || ''
       };
@@ -443,6 +443,7 @@ class DatabaseService {
         joining_date: student.joiningDate,
         monthly_fee: Number(student.monthlyFee) || 0,
         advance_amount: Number(student.advanceAmount) || 0,
+        advance_date: student.advanceDate || null,
         status: student.status || 'active',
         notes: student.notes || '',
         updated_at: new Date().toISOString()

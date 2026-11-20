@@ -774,15 +774,18 @@ function renderFeesManagementTab(container) {
   const collectionRate = summary.expectedFee > 0 ? Math.round((summary.collectedFee / summary.expectedFee) * 100) : 0;
 
   // Filter rows by ledger status filter
+  const notJoinedCount = rows.filter(r => r.status === 'Not Joined' || r.isNotJoined).length;
+  const discontinuedCount = rows.filter(r => r.status === 'Discontinued' || r.isDiscontinued).length;
+  const continuingCount = rows.filter(r => r.status !== 'Discontinued' && !r.isDiscontinued && r.status !== 'Not Joined' && !r.isNotJoined).length;
+
   const displayRows = rows.filter(r => {
     const isDisc = r.status === 'Discontinued' || r.isDiscontinued;
-    if (adminLedgerStatusFilter === 'continuing') return !isDisc;
+    const isNotJoined = r.status === 'Not Joined' || r.isNotJoined;
+    if (adminLedgerStatusFilter === 'continuing') return !isDisc && !isNotJoined;
+    if (adminLedgerStatusFilter === 'not_joined') return isNotJoined;
     if (adminLedgerStatusFilter === 'discontinued') return isDisc;
     return true;
   });
-
-  const continuingCount = rows.filter(r => r.status !== 'Discontinued' && !r.isDiscontinued).length;
-  const discontinuedCount = rows.filter(r => r.status === 'Discontinued' || r.isDiscontinued).length;
 
   container.innerHTML = `
     <div class="space-y-6">
@@ -799,6 +802,7 @@ function renderFeesManagementTab(container) {
             <select onchange="changeLedgerStatusFilter(this.value)" class="text-xs font-bold text-brand-dark bg-transparent outline-none cursor-pointer">
               <option value="all" ${adminLedgerStatusFilter === 'all' ? 'selected' : ''}>All (${rows.length})</option>
               <option value="continuing" ${adminLedgerStatusFilter === 'continuing' ? 'selected' : ''}>Continuing (${continuingCount})</option>
+              ${notJoinedCount > 0 ? `<option value="not_joined" ${adminLedgerStatusFilter === 'not_joined' ? 'selected' : ''}>Not Joined (${notJoinedCount})</option>` : ''}
               <option value="discontinued" ${adminLedgerStatusFilter === 'discontinued' ? 'selected' : ''}>Discontinued (${discontinuedCount})</option>
             </select>
           </div>
@@ -888,7 +892,7 @@ function renderFeesManagementTab(container) {
           </div>
           <div class="admin-stat-value" style="font-size: 1.85rem !important; font-weight: 800 !important; line-height: 1.1 !important; color: #111827 !important; margin: 2px 0 !important; margin-left: 0 !important; padding-left: 4px !important; letter-spacing: -0.02em !important;">${collectionRate}%</div>
           <div style="margin-left: 0 !important; padding-left: 4px !important;">
-            <div class="admin-stat-subtitle text-muted" style="font-size: 0.75rem !important; font-weight: 500 !important; color: #6B7280 !important; line-height: 1.35 !important; margin-bottom: 6px !important;">${discontinuedCount > 0 ? discontinuedCount + ' Discontinued (No Dues)' : 'Monthly billing cycle'}</div>
+            <div class="admin-stat-subtitle text-muted" style="font-size: 0.75rem !important; font-weight: 500 !important; color: #6B7280 !important; line-height: 1.35 !important; margin-bottom: 6px !important;">${notJoinedCount > 0 ? notJoinedCount + ' Not Joined • ' : ''}${discontinuedCount > 0 ? discontinuedCount + ' Discontinued (No Dues)' : 'Monthly billing cycle'}</div>
             <div class="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
               <div class="bg-emerald-600 h-full rounded-full transition-all" style="width: ${collectionRate}%"></div>
             </div>
@@ -923,8 +927,11 @@ function renderFeesManagementTab(container) {
                   <tr><td colspan="9" class="text-center py-8 text-brand-muted">No student fee records found for ${currentMonthName} ${year}.</td></tr>
                 ` : sortedRows.map(r => {
                 const isDisc = r.status === 'Discontinued' || r.isDiscontinued;
+                const isNotJoined = r.status === 'Not Joined' || r.isNotJoined;
                 const statusBadge = isDisc
                   ? `<span class="badge-3d-capsule bg-stone-100 text-stone-600 border border-stone-300 text-[10px]">Discontinued (No Dues)</span>`
+                  : isNotJoined
+                  ? `<span class="badge-3d-capsule bg-stone-100 text-stone-500 border border-stone-300 text-[10px]">Not Joined</span>`
                   : r.status === 'Full Paid'
                   ? `<span class="badge-3d-capsule badge-3d-paid text-[10px]">✓ Full Paid</span>`
                   : r.status === 'Half Paid'
@@ -940,7 +947,7 @@ function renderFeesManagementTab(container) {
                 const studentDetail = studentObj?.school || studentObj?.roll_no || studentObj?.rollNo || r.school || r.rollNo || 'Regular Batch';
 
                 return `
-                  <tr class="row-float-3d hover:bg-[#FAF7F2] transition ${isDisc ? 'opacity-70 bg-stone-50/50' : ''}">
+                  <tr class="row-float-3d hover:bg-[#FAF7F2] transition ${isDisc || isNotJoined ? 'opacity-70 bg-stone-50/50' : ''}">
                     <td class="py-3.5 px-4 font-bold text-brand-dark">
                       <div class="flex items-center gap-2 flex-wrap">
                         <span>${studentName}</span>
@@ -950,6 +957,10 @@ function renderFeesManagementTab(container) {
                                   class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 transition cursor-pointer">
                             <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Discontinued
                           </button>
+                        ` : isNotJoined ? `
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-500 border border-stone-200" title="Student joining date is in a future month">
+                            <span class="w-1.5 h-1.5 rounded-full bg-stone-400"></span> Pre-Joining
+                          </span>
                         ` : `
                           <button onclick="toggleAdminStudentStatus(${r.studentId})"
                                   title="Click to mark as Discontinued"
@@ -963,14 +974,22 @@ function renderFeesManagementTab(container) {
                     <td class="py-3.5 px-4">
                       <span class="badge-3d-inset text-[10px] font-bold px-2 py-0.5 rounded text-brand-dark">${studentClass}</span>
                     </td>
-                    <td class="py-3.5 px-4 font-semibold text-brand-dark">${isDisc ? '—' : '₹' + r.monthlyFee}</td>
-                    <td class="py-3.5 px-4 font-mono text-brand-dark">${isDisc ? '—' : r.dueDate}</td>
+                    <td class="py-3.5 px-4 font-semibold text-brand-dark">${isNotJoined ? '₹0' : isDisc ? '—' : '₹' + r.monthlyFee}</td>
+                    <td class="py-3.5 px-4 font-mono text-brand-dark">${(isDisc || isNotJoined) ? '—' : r.dueDate}</td>
                     <td class="py-3.5 px-4 font-mono text-brand-muted">${r.paidDate || '—'}</td>
                     <td class="py-3.5 px-4 font-bold text-emerald-700">₹${r.paidAmount}</td>
-                    <td class="py-3.5 px-4 font-bold ${r.balance > 0 ? 'text-red-700' : 'text-stone-400'}">₹${r.balance}</td>
+                    <td class="py-3.5 px-4 font-bold ${(!isNotJoined && !isDisc && r.balance > 0) ? 'text-red-700' : 'text-stone-400'}">₹${isNotJoined ? 0 : r.balance}</td>
                     <td class="py-3.5 px-4">${statusBadge}</td>
                     <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
-                      ${isDisc ? `
+                      ${isNotJoined ? `
+                        <span class="text-xs text-stone-400 font-medium px-2 py-1">Not Joined</span>
+                        ${r.paidAmount > 0 ? `
+                          <button onclick="viewLatestReceiptForMonth(${r.studentId}, ${year}, ${month})"
+                                  class="btn-3d-tactile-sm px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-brand-dark text-[11px] font-medium" title="View & Print Receipt">
+                            Receipt
+                          </button>
+                        ` : ''}
+                      ` : isDisc ? `
                         <button onclick="toggleAdminStudentStatus(${r.studentId})"
                                 class="btn-3d-tactile-sm px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-semibold" title="Mark student as Continuing">
                           Reactivate

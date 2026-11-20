@@ -47,6 +47,9 @@ function openAddStudentModal() {
   const advInput = document.getElementById('asm-advance');
   if (advInput) advInput.value = 0;
 
+  const advDateInput = document.getElementById('asm-advance-date');
+  if (advDateInput) advDateInput.value = todayISO;
+
   const statusInput = document.getElementById('asm-status');
   if (statusInput) statusInput.value = 'active';
 
@@ -78,6 +81,14 @@ function openEditStudentModal(id) {
   document.getElementById('asm-joining-date').value = isoDate;
   document.getElementById('asm-fee').value = student.monthlyFee || 1200;
   document.getElementById('asm-advance').value = student.advanceAmount || 0;
+
+  let advDate = student.advanceDate || student.advance_date;
+  if (!advDate || !/^\d{4}-\d{2}-\d{2}$/.test(advDate)) {
+    advDate = (student.feeHistory && student.feeHistory[0] ? student.feeHistory[0].date : null) || isoDate;
+  }
+  const advDateInput = document.getElementById('asm-advance-date');
+  if (advDateInput) advDateInput.value = advDate;
+
   document.getElementById('asm-notes').value = student.notes || '';
 
   const statusInput = document.getElementById('asm-status');
@@ -107,6 +118,14 @@ function handleSaveStudentForm(e) {
   const joiningDate = document.getElementById('asm-joining-date').value;
   const monthlyFee = Number(document.getElementById('asm-fee').value);
   const advanceAmount = Number(document.getElementById('asm-advance').value || 0);
+  let advanceDate = document.getElementById('asm-advance-date')?.value;
+  if (advanceAmount > 0) {
+    if (!advanceDate || !/^\d{4}-\d{2}-\d{2}$/.test(advanceDate)) {
+      advanceDate = joiningDate || new Date().toISOString().split('T')[0];
+    }
+  } else {
+    advanceDate = null;
+  }
   const notes = document.getElementById('asm-notes').value.trim();
   const status = document.getElementById('asm-status')?.value || 'active';
 
@@ -130,6 +149,7 @@ function handleSaveStudentForm(e) {
         joiningDate,
         monthlyFee,
         advanceAmount,
+        advanceDate,
         notes,
         status
       });
@@ -145,6 +165,7 @@ function handleSaveStudentForm(e) {
         joiningDate,
         monthlyFee,
         advanceAmount,
+        advanceDate,
         notes,
         status
       });
