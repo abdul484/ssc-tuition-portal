@@ -493,16 +493,16 @@ function renderOverviewTab(container) {
           </button>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
+        <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch; width: 100%; display: block;">
+          <table class="w-full text-left text-xs" style="min-width: 650px;">
             <thead>
               <tr class="text-brand-muted uppercase tracking-wider border-b border-[#F0E8DC]">
-                <th class="py-2.5 px-3">Req ID</th>
-                <th class="py-2.5 px-3">Student Name</th>
-                <th class="py-2.5 px-3">Requested Class</th>
-                <th class="py-2.5 px-3">Parent & Phone</th>
-                <th class="py-2.5 px-3">Status</th>
-                <th class="py-2.5 px-3 text-right">Action</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Req ID</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Student Name</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Requested Class</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Parent & Phone</th>
+                <th class="py-2.5 px-3 whitespace-nowrap">Status</th>
+                <th class="py-2.5 px-3 text-right whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#F7F2EB]">
@@ -510,18 +510,18 @@ function renderOverviewTab(container) {
                 <tr><td colspan="6" class="text-center py-6 text-brand-muted">No online enrollment applications submitted yet.</td></tr>
               ` : enrollments.slice(0, 4).map(e => `
                 <tr class="hover:bg-[#FAF7F2] transition">
-                  <td class="py-3 px-3 font-mono text-[11px] font-semibold text-brand-dark">${e.requestId}</td>
-                  <td class="py-3 px-3 font-bold text-brand-dark">${e.studentName}</td>
-                  <td class="py-3 px-3"><span class="px-2 py-0.5 rounded-full bg-stone-100 font-semibold">${e.requestedClass}</span></td>
-                  <td class="py-3 px-3 text-brand-muted">${e.parentName || 'Parent'} • ${e.phone}</td>
-                  <td class="py-3 px-3">
+                  <td class="py-3 px-3 font-mono text-[11px] font-semibold text-brand-dark whitespace-nowrap">${e.requestId}</td>
+                  <td class="py-3 px-3 font-bold text-brand-dark whitespace-nowrap">${e.studentName}</td>
+                  <td class="py-3 px-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded-full bg-stone-100 font-semibold">${e.requestedClass}</span></td>
+                  <td class="py-3 px-3 text-brand-muted whitespace-nowrap">${e.parentName || 'Parent'} • ${e.phone}</td>
+                  <td class="py-3 px-3 whitespace-nowrap">
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
                       e.status === 'pending' ? 'bg-amber-100 text-amber-800' :
                       e.status === 'contacted' ? 'bg-blue-100 text-blue-800' :
                       e.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                     }">${e.status.toUpperCase()}</span>
                   </td>
-                  <td class="py-3 px-3 text-right">
+                  <td class="py-3 px-3 text-right whitespace-nowrap">
                     <button onclick="reviewEnrollmentModal('${e.requestId}')" class="px-3 py-1 rounded-lg bg-brand-dark hover:bg-black text-white text-[11px] font-semibold transition">
                       Review
                     </button>
@@ -633,22 +633,22 @@ function renderStudentsManagementTab(container) {
 
       <!-- Students Table -->
       <div class="bg-white rounded-3xl border border-[#ECE2D2] overflow-hidden shadow-xs">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
+        <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch; width: 100%; display: block;">
+          <table class="w-full text-left text-xs" style="min-width: 880px;">
             <thead class="bg-[#FAF6EE] text-brand-muted uppercase tracking-wider border-b border-[#ECE2D2]">
               <tr>
-                <th class="py-3 px-4">Roll / ID</th>
-                <th class="py-3 px-4">Student Name</th>
-                <th class="py-3 px-4 cursor-pointer select-none hover:text-brand-dark transition" onclick="toggleAdminStudentClassSort()" title="Click to sort by Class (LKG → 10th / 10th → LKG)">
+                <th class="py-3 px-4 whitespace-nowrap">Roll / ID</th>
+                <th class="py-3 px-4 whitespace-nowrap">Student Name</th>
+                <th class="py-3 px-4 cursor-pointer select-none hover:text-brand-dark transition whitespace-nowrap" onclick="toggleAdminStudentClassSort()" title="Click to sort by Class (LKG → 10th / 10th → LKG)">
                   Class <span class="text-[10px]">${adminStudentSort === 'class-desc' ? '▼' : adminStudentSort === 'class-asc' ? '▲' : '↕'}</span>
                 </th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4">Parent & Contact</th>
-                <th class="py-3 px-4">School</th>
-                <th class="py-3 px-4">Joining Date</th>
-                <th class="py-3 px-4">Monthly Fee</th>
-                <th class="py-3 px-4">Current Month Fee</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3 px-4 whitespace-nowrap">Status</th>
+                <th class="py-3 px-4 whitespace-nowrap">Parent & Contact</th>
+                <th class="py-3 px-4 whitespace-nowrap">School</th>
+                <th class="py-3 px-4 whitespace-nowrap">Joining Date</th>
+                <th class="py-3 px-4 whitespace-nowrap">Monthly Fee</th>
+                <th class="py-3 px-4 whitespace-nowrap">Current Month Fee</th>
+                <th class="py-3 px-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#F4ECE1]">
@@ -660,6 +660,10 @@ function renderStudentsManagementTab(container) {
                 ` : sorted.map(s => {
                 const isDisc = s.status === 'discontinued' || s.status === 'inactive';
                 const monthFee = window.SSCStore.getStudentMonthFee(s.id, window.currentLedgerYear || 2026, window.currentLedgerMonth || (new Date().getMonth() + 1));
+                const parentName = s.parentName || s.fatherName || 'Parent';
+                const phone = s.phone || '—';
+                const cleanPhone = String(phone).replace(/[^\d+]/g, '');
+                const escapedParentName = String(parentName).replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 
                 const statusBadge = isDisc
                   ? `<span class="badge-3d-capsule bg-stone-100 text-stone-600 border border-stone-300 text-[10px]">Discontinued (No Dues)</span>`
@@ -673,10 +677,10 @@ function renderStudentsManagementTab(container) {
 
                 return `
                   <tr class="row-float-3d hover:bg-[#FAF7F2] transition ${isDisc ? 'opacity-75 bg-stone-50/60' : ''}">
-                    <td class="py-3.5 px-4 font-mono text-[11px] font-bold text-brand-muted">${s.rollNo || 'SSC-' + s.id}</td>
-                    <td class="py-3.5 px-4 font-bold text-brand-dark">${s.name}</td>
-                    <td class="py-3.5 px-4"><span class="badge-3d-inset text-[10px] font-bold px-2 py-0.5 rounded text-brand-dark">${s.class}</span></td>
-                    <td class="py-3.5 px-4">
+                    <td class="py-3.5 px-4 font-mono text-[11px] font-bold text-brand-muted whitespace-nowrap">${s.rollNo || 'SSC-' + s.id}</td>
+                    <td class="py-3.5 px-4 font-bold text-brand-dark whitespace-nowrap">${s.name}</td>
+                    <td class="py-3.5 px-4 whitespace-nowrap"><span class="badge-3d-inset text-[10px] font-bold px-2 py-0.5 rounded text-brand-dark">${s.class}</span></td>
+                    <td class="py-3.5 px-4 whitespace-nowrap">
                       ${isDisc ? `
                         <button onclick="toggleAdminStudentStatus(${s.id})"
                                 title="Click to mark as Continuing"
@@ -693,11 +697,41 @@ function renderStudentsManagementTab(container) {
                         </button>
                       `}
                     </td>
-                    <td class="py-3.5 px-4 text-brand-dark">${s.parentName || s.fatherName || 'Parent'}<br><span class="text-brand-muted font-mono text-[11px]">${s.phone}</span></td>
-                    <td class="py-3.5 px-4 text-brand-muted max-w-[150px] truncate">${s.school || '—'}</td>
-                    <td class="py-3.5 px-4 font-mono text-brand-muted">${s.joiningDate || '—'}</td>
-                    <td class="py-3.5 px-4 font-semibold text-brand-dark">${isDisc ? '—' : '₹' + s.monthlyFee}</td>
-                    <td class="py-3.5 px-4">${statusBadge}</td>
+                    <td class="parent-contact-cell py-3.5 px-4 text-brand-dark whitespace-nowrap"
+                        onclick="copyParentContact('${cleanPhone}', '${escapedParentName}', event)"
+                        title="Click to copy contact number (${cleanPhone})">
+                      <div class="parent-contact-default">
+                        <div class="font-bold text-xs text-brand-dark">${parentName}</div>
+                        <div class="text-brand-muted font-mono text-[11px] flex items-center gap-1">
+                          <span class="text-[10px] text-stone-400">📞</span>
+                          <span>${phone}</span>
+                        </div>
+                      </div>
+                      <!-- Crisp Elevated Hover-Zoom Floating Card -->
+                      <div class="parent-contact-preview-card" onclick="copyParentContact('${cleanPhone}', '${escapedParentName}', event)">
+                        <div class="flex items-center justify-between gap-2 pb-1.5 mb-1.5 border-b border-[#EADBCE]/70">
+                          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-950 bg-amber-100/90 border border-amber-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <span>👨‍👧 Parent / Guardian</span>
+                          </span>
+                          <span class="copy-hint-pill text-[10px] font-bold text-stone-600 bg-stone-100 px-2 py-0.5 rounded-md border border-stone-200/80 transition-colors">
+                            📋 Click to Copy
+                          </span>
+                        </div>
+                        <div class="parent-name-title text-[15px] sm:text-[16px] font-bold text-brand-dark leading-snug">
+                          ${parentName}
+                        </div>
+                        <div class="mt-1.5 flex items-center gap-2">
+                          <span class="text-emerald-700 text-sm">📞</span>
+                          <span class="parent-phone-title font-mono text-[18px] sm:text-[20px] font-extrabold text-emerald-900 tracking-wider">
+                            ${cleanPhone || phone}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3.5 px-4 text-brand-muted max-w-[150px] truncate whitespace-nowrap">${s.school || '—'}</td>
+                    <td class="py-3.5 px-4 font-mono text-brand-muted whitespace-nowrap">${s.joiningDate || '—'}</td>
+                    <td class="py-3.5 px-4 font-semibold text-brand-dark whitespace-nowrap">${isDisc ? '—' : '₹' + s.monthlyFee}</td>
+                    <td class="py-3.5 px-4 whitespace-nowrap">${statusBadge}</td>
                     <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
                       <button onclick="openStudentModal(${s.id})" title="Fee History" class="btn-3d-tactile-sm p-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-brand-dark">
                         📋
@@ -774,13 +808,24 @@ function renderFeesManagementTab(container) {
   const collectionRate = summary.expectedFee > 0 ? Math.round((summary.collectedFee / summary.expectedFee) * 100) : 0;
 
   // Filter rows by ledger status filter
+  const isPendingFeeRow = (r) => {
+    const isDisc = r.status === 'Discontinued' || r.isDiscontinued;
+    const isNotJoined = r.status === 'Not Joined' || r.isNotJoined;
+    if (isDisc || isNotJoined) return false;
+    const st = (r.status || '').toLowerCase().trim();
+    if (st === 'full paid' || st === 'paid' || st === 'cleared') return false;
+    return st === 'pending' || st === 'half paid' || st === 'partial' || r.balance > 0;
+  };
+
   const notJoinedCount = rows.filter(r => r.status === 'Not Joined' || r.isNotJoined).length;
   const discontinuedCount = rows.filter(r => r.status === 'Discontinued' || r.isDiscontinued).length;
   const continuingCount = rows.filter(r => r.status !== 'Discontinued' && !r.isDiscontinued && r.status !== 'Not Joined' && !r.isNotJoined).length;
+  const feePendingCount = rows.filter(isPendingFeeRow).length;
 
   const displayRows = rows.filter(r => {
     const isDisc = r.status === 'Discontinued' || r.isDiscontinued;
     const isNotJoined = r.status === 'Not Joined' || r.isNotJoined;
+    if (adminLedgerStatusFilter === 'fee_pending') return isPendingFeeRow(r);
     if (adminLedgerStatusFilter === 'continuing') return !isDisc && !isNotJoined;
     if (adminLedgerStatusFilter === 'not_joined') return isNotJoined;
     if (adminLedgerStatusFilter === 'discontinued') return isDisc;
@@ -801,6 +846,7 @@ function renderFeesManagementTab(container) {
             <span class="text-xs font-semibold text-brand-muted">Status:</span>
             <select onchange="changeLedgerStatusFilter(this.value)" class="text-xs font-bold text-brand-dark bg-transparent outline-none cursor-pointer">
               <option value="all" ${adminLedgerStatusFilter === 'all' ? 'selected' : ''}>All (${rows.length})</option>
+              <option value="fee_pending" ${adminLedgerStatusFilter === 'fee_pending' ? 'selected' : ''}>Pending Fee Only (${feePendingCount})</option>
               <option value="continuing" ${adminLedgerStatusFilter === 'continuing' ? 'selected' : ''}>Continuing (${continuingCount})</option>
               ${notJoinedCount > 0 ? `<option value="not_joined" ${adminLedgerStatusFilter === 'not_joined' ? 'selected' : ''}>Not Joined (${notJoinedCount})</option>` : ''}
               <option value="discontinued" ${adminLedgerStatusFilter === 'discontinued' ? 'selected' : ''}>Discontinued (${discontinuedCount})</option>
@@ -815,6 +861,7 @@ function renderFeesManagementTab(container) {
               <option value="class-desc" ${adminLedgerSort === 'class-desc' ? 'selected' : ''}>Class: Higher to Lower (10th → LKG)</option>
               <option value="name-asc" ${adminLedgerSort === 'name-asc' ? 'selected' : ''}>Name: A → Z</option>
               <option value="roll-asc" ${adminLedgerSort === 'roll-asc' ? 'selected' : ''}>Roll No: Ascending</option>
+              <option value="pending_first" ${adminLedgerSort === 'pending_first' ? 'selected' : ''}>Fee Status: Pending First</option>
             </select>
           </div>
 
@@ -902,21 +949,21 @@ function renderFeesManagementTab(container) {
 
       <!-- Month Ledger Table -->
       <div class="bg-white rounded-3xl border border-[#ECE2D2] overflow-hidden shadow-xs">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
+        <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch; width: 100%; display: block;">
+          <table class="w-full text-left text-xs" style="min-width: 820px;">
             <thead class="bg-[#FAF6EE] text-brand-muted uppercase tracking-wider border-b border-[#ECE2D2]">
               <tr>
-                <th class="py-3 px-4">Student Name & Status</th>
-                <th class="py-3 px-4 cursor-pointer select-none hover:text-brand-dark transition" onclick="toggleLedgerClassSort()" title="Click to sort by Class (LKG → 10th / 10th → LKG)">
+                <th class="py-3 px-4 whitespace-nowrap">Student Name & Status</th>
+                <th class="py-3 px-4 cursor-pointer select-none hover:text-brand-dark transition whitespace-nowrap" onclick="toggleLedgerClassSort()" title="Click to sort by Class (LKG → 10th / 10th → LKG)">
                   Class <span class="text-[10px]">${adminLedgerSort === 'class-desc' ? '▼' : adminLedgerSort === 'class-asc' ? '▲' : '↕'}</span>
                 </th>
-                <th class="py-3 px-4">Monthly Fee</th>
-                <th class="py-3 px-4">Due Date</th>
-                <th class="py-3 px-4">Paid Date</th>
-                <th class="py-3 px-4">Paid Amount</th>
-                <th class="py-3 px-4">Balance Due</th>
-                <th class="py-3 px-4">Fee Status</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3 px-4 whitespace-nowrap">Monthly Fee</th>
+                <th class="py-3 px-4 whitespace-nowrap">Due Date</th>
+                <th class="py-3 px-4 whitespace-nowrap">Paid Date</th>
+                <th class="py-3 px-4 whitespace-nowrap">Paid Amount</th>
+                <th class="py-3 px-4 whitespace-nowrap">Balance Due</th>
+                <th class="py-3 px-4 whitespace-nowrap">Fee Status</th>
+                <th class="py-3 px-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#F4ECE1]">
@@ -948,7 +995,7 @@ function renderFeesManagementTab(container) {
 
                 return `
                   <tr class="row-float-3d hover:bg-[#FAF7F2] transition ${isDisc || isNotJoined ? 'opacity-70 bg-stone-50/50' : ''}">
-                    <td class="py-3.5 px-4 font-bold text-brand-dark">
+                    <td class="py-3.5 px-4 font-bold text-brand-dark whitespace-nowrap">
                       <div class="flex items-center gap-2 flex-wrap">
                         <span>${studentName}</span>
                         ${isDisc ? `
@@ -971,15 +1018,15 @@ function renderFeesManagementTab(container) {
                       </div>
                       <span class="block text-[11px] font-normal text-brand-muted">${studentDetail}</span>
                     </td>
-                    <td class="py-3.5 px-4">
+                    <td class="py-3.5 px-4 whitespace-nowrap">
                       <span class="badge-3d-inset text-[10px] font-bold px-2 py-0.5 rounded text-brand-dark">${studentClass}</span>
                     </td>
-                    <td class="py-3.5 px-4 font-semibold text-brand-dark">${isNotJoined ? '₹0' : isDisc ? '—' : '₹' + r.monthlyFee}</td>
-                    <td class="py-3.5 px-4 font-mono text-brand-dark">${(isDisc || isNotJoined) ? '—' : r.dueDate}</td>
-                    <td class="py-3.5 px-4 font-mono text-brand-muted">${r.paidDate || '—'}</td>
-                    <td class="py-3.5 px-4 font-bold text-emerald-700">₹${r.paidAmount}</td>
-                    <td class="py-3.5 px-4 font-bold ${(!isNotJoined && !isDisc && r.balance > 0) ? 'text-red-700' : 'text-stone-400'}">₹${isNotJoined ? 0 : r.balance}</td>
-                    <td class="py-3.5 px-4">${statusBadge}</td>
+                    <td class="py-3.5 px-4 font-semibold text-brand-dark whitespace-nowrap">${isNotJoined ? '₹0' : isDisc ? '—' : '₹' + r.monthlyFee}</td>
+                    <td class="py-3.5 px-4 font-mono text-brand-dark whitespace-nowrap">${(isDisc || isNotJoined) ? '—' : r.dueDate}</td>
+                    <td class="py-3.5 px-4 font-mono text-brand-muted whitespace-nowrap">${r.paidDate || '—'}</td>
+                    <td class="py-3.5 px-4 font-bold text-emerald-700 whitespace-nowrap">₹${r.paidAmount}</td>
+                    <td class="py-3.5 px-4 font-bold whitespace-nowrap ${(!isNotJoined && !isDisc && r.balance > 0) ? 'text-red-700' : 'text-stone-400'}">₹${isNotJoined ? 0 : r.balance}</td>
+                    <td class="py-3.5 px-4 whitespace-nowrap">${statusBadge}</td>
                     <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
                       ${isNotJoined ? `
                         <span class="text-xs text-stone-400 font-medium px-2 py-1">Not Joined</span>
@@ -1071,17 +1118,20 @@ window.toggleAdminStudentClassSort = function() {
 
 window.changeLedgerSort = function(newSort) {
   adminLedgerSort = newSort;
+  window.adminLedgerSort = newSort;
   const container = document.getElementById('admin-tab-content-area');
   if (container) renderFeesManagementTab(container);
 };
 
 window.toggleLedgerClassSort = function() {
   adminLedgerSort = (adminLedgerSort === 'class-asc') ? 'class-desc' : 'class-asc';
+  window.adminLedgerSort = adminLedgerSort;
   const container = document.getElementById('admin-tab-content-area');
   if (container) renderFeesManagementTab(container);
 };
 
 window.changeLedgerStatusFilter = function(newFilter) {
+  adminLedgerStatusFilter = newFilter;
   window.adminLedgerStatusFilter = newFilter;
   const container = document.getElementById('admin-tab-content-area');
   if (container) renderFeesManagementTab(container);
@@ -1103,6 +1153,71 @@ window.toggleAdminStudentStatus = function(studentId) {
     }
   }
 };
+
+window.copyParentContact = function(phone, parentName, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const cleanPhone = String(phone || '').replace(/[^\d+]/g, '');
+  if (!cleanPhone || cleanPhone === '—') {
+    showGlobalToast('No valid contact number available to copy.', false);
+    return;
+  }
+
+  const doCopy = () => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(cleanPhone).catch(() => {
+        fallbackCopyText(cleanPhone);
+      });
+    } else {
+      fallbackCopyText(cleanPhone);
+    }
+  };
+
+  doCopy();
+
+  // Visual feedback on the cell and preview card
+  if (event) {
+    const cell = event.currentTarget || (event.target ? event.target.closest('.parent-contact-cell') : null);
+    if (cell) {
+      cell.classList.add('active-touch');
+      const hint = cell.querySelector('.copy-hint-pill');
+      if (hint) {
+        const origText = hint.innerHTML;
+        hint.innerHTML = '✓ Copied!';
+        hint.classList.add('bg-emerald-100', 'text-emerald-800', 'border-emerald-300');
+        setTimeout(() => {
+          hint.innerHTML = origText;
+          hint.classList.remove('bg-emerald-100', 'text-emerald-800', 'border-emerald-300');
+          cell.classList.remove('active-touch');
+        }, 1500);
+      } else {
+        setTimeout(() => {
+          cell.classList.remove('active-touch');
+        }, 1500);
+      }
+    }
+  }
+
+  const label = parentName ? `${cleanPhone} (${parentName})` : cleanPhone;
+  showGlobalToast(`Copied ${label} to clipboard!`, true);
+};
+
+function fallbackCopyText(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  } catch (e) {
+    console.warn('Fallback copy failed:', e);
+  }
+}
+window.fallbackCopyText = fallbackCopyText;
 
 window.changeLedgerMonth = function(newMonth) {
   window.currentLedgerMonth = Number(newMonth);
@@ -1376,17 +1491,17 @@ function renderEnrollmentsTab(container) {
 
       <!-- Requests Table -->
       <div class="bg-white rounded-3xl border border-[#ECE2D2] overflow-hidden shadow-xs">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
+        <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch; width: 100%; display: block;">
+          <table class="w-full text-left text-xs" style="min-width: 720px;">
             <thead class="bg-[#FAF6EE] text-brand-muted uppercase tracking-wider border-b border-[#ECE2D2]">
               <tr>
-                <th class="py-3 px-4">Request ID</th>
-                <th class="py-3 px-4">Student</th>
-                <th class="py-3 px-4">Grade</th>
-                <th class="py-3 px-4">Parent Details</th>
-                <th class="py-3 px-4">School & Board</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3 px-4 whitespace-nowrap">Request ID</th>
+                <th class="py-3 px-4 whitespace-nowrap">Student</th>
+                <th class="py-3 px-4 whitespace-nowrap">Grade</th>
+                <th class="py-3 px-4 whitespace-nowrap">Parent Details</th>
+                <th class="py-3 px-4 whitespace-nowrap">School & Board</th>
+                <th class="py-3 px-4 whitespace-nowrap">Status</th>
+                <th class="py-3 px-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#F4ECE1]">
@@ -1394,12 +1509,12 @@ function renderEnrollmentsTab(container) {
                 <tr><td colspan="7" class="text-center py-8 text-brand-muted">No applications found in this category.</td></tr>
               ` : filtered.map(e => `
                 <tr class="row-float-3d hover:bg-[#FAF7F2] transition">
-                  <td class="py-3 px-4 font-mono font-bold text-[11px] text-brand-dark">${e.requestId}</td>
-                  <td class="py-3 px-4 font-bold text-brand-dark">${e.studentName}</td>
-                  <td class="py-3 px-4"><span class="badge-3d-inset text-[10px] font-bold px-2 py-0.5 rounded text-brand-dark">${e.requestedClass}</span></td>
-                  <td class="py-3 px-4 text-brand-dark">${e.parentName || 'Parent'}<br><span class="text-brand-muted font-mono text-[11px]">${e.phone}</span></td>
-                  <td class="py-3 px-4 text-brand-muted">${e.schoolName || '—'}<br><span class="text-[10px] font-semibold">${e.board || 'State Board'}</span></td>
-                  <td class="py-3 px-4">
+                  <td class="py-3 px-4 font-mono font-bold text-[11px] text-brand-dark whitespace-nowrap">${e.requestId}</td>
+                  <td class="py-3 px-4 font-bold text-brand-dark whitespace-nowrap">${e.studentName}</td>
+                  <td class="py-3 px-4 whitespace-nowrap"><span class="badge-3d-inset text-[10px] font-bold px-2 py-0.5 rounded text-brand-dark">${e.requestedClass}</span></td>
+                  <td class="py-3 px-4 text-brand-dark whitespace-nowrap">${e.parentName || 'Parent'}<br><span class="text-brand-muted font-mono text-[11px]">${e.phone}</span></td>
+                  <td class="py-3 px-4 text-brand-muted whitespace-nowrap">${e.schoolName || '—'}<br><span class="text-[10px] font-semibold">${e.board || 'State Board'}</span></td>
+                  <td class="py-3 px-4 whitespace-nowrap">
                     <span class="badge-3d-capsule text-[10px] ${
                       e.status === 'pending' ? 'badge-3d-half' :
                       e.status === 'contacted' ? 'bg-blue-100 text-blue-900 border-b-2 border-blue-300' :
@@ -1461,16 +1576,16 @@ function renderStaffManagementTab(container) {
 
       <!-- Staff List Table -->
       <div class="bg-white rounded-3xl border border-[#ECE2D2] overflow-hidden shadow-xs">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
+        <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch; width: 100%; display: block;">
+          <table class="w-full text-left text-xs" style="min-width: 650px;">
             <thead class="bg-[#FAF6EE] text-brand-muted uppercase tracking-wider border-b border-[#ECE2D2]">
               <tr>
-                <th class="py-3 px-4">Staff Name</th>
-                <th class="py-3 px-4">Email</th>
-                <th class="py-3 px-4">Phone</th>
-                <th class="py-3 px-4">Role</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3 px-4 whitespace-nowrap">Staff Name</th>
+                <th class="py-3 px-4 whitespace-nowrap">Email</th>
+                <th class="py-3 px-4 whitespace-nowrap">Phone</th>
+                <th class="py-3 px-4 whitespace-nowrap">Role</th>
+                <th class="py-3 px-4 whitespace-nowrap">Status</th>
+                <th class="py-3 px-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#F4ECE1]">
@@ -1478,15 +1593,15 @@ function renderStaffManagementTab(container) {
                 const isPrimaryAdmin = s.email === 'admin@sscstudycircle.com' || s.id === 'stf-001';
                 return `
                   <tr class="hover:bg-[#FAF7F2] transition">
-                    <td class="py-3 px-4 font-bold text-brand-dark">${s.fullName}</td>
-                    <td class="py-3 px-4 text-brand-muted font-mono">${s.email}</td>
-                    <td class="py-3 px-4 text-brand-muted font-mono">${s.phone || '—'}</td>
-                    <td class="py-3 px-4">
+                    <td class="py-3 px-4 font-bold text-brand-dark whitespace-nowrap">${s.fullName}</td>
+                    <td class="py-3 px-4 text-brand-muted font-mono whitespace-nowrap">${s.email}</td>
+                    <td class="py-3 px-4 text-brand-muted font-mono whitespace-nowrap">${s.phone || '—'}</td>
+                    <td class="py-3 px-4 whitespace-nowrap">
                       <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.role === 'admin' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-blue-100 text-blue-900'}">
                         ${s.role === 'admin' ? 'Owner / Director' : 'Staff / Faculty'}
                       </span>
                     </td>
-                    <td class="py-3 px-4">
+                    <td class="py-3 px-4 whitespace-nowrap">
                       <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                         s.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
                         s.status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'

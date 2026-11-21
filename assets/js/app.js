@@ -1229,20 +1229,20 @@ function renderStudentsTable() {
 
     return `
       <tr class="row-float-3d hover:bg-[#FAF7F2] transition-all border-b border-[#F4ECE3] text-[14px]">
-        <td class="py-4 px-6 text-[#705E53] font-medium">${sNo}</td>
-        <td class="py-4 px-6 font-bold text-[#261710]">
+        <td class="py-4 px-6 text-[#705E53] font-medium whitespace-nowrap">${sNo}</td>
+        <td class="py-4 px-6 font-bold text-[#261710] whitespace-nowrap">
           ${student.name}
           ${student.school ? `<div class="text-[11px] font-normal text-[#8A796F] truncate max-w-[160px]">${student.school}</div>` : ''}
         </td>
-        <td class="py-4 px-6">
+        <td class="py-4 px-6 whitespace-nowrap">
           <span class="badge-3d-class border inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${badgeStyle}">
             ${student.class}
           </span>
         </td>
-        <td class="py-4 px-6 text-[#4F3F35] font-normal tracking-wide font-mono text-xs">${student.phone}</td>
-        <td class="py-4 px-6 text-[#4F3F35] font-medium">${formattedJoiningDate}</td>
-        <td class="py-4 px-6">${currentMonthBadge}</td>
-        <td class="py-4 px-6 text-center">
+        <td class="py-4 px-6 text-[#4F3F35] font-normal tracking-wide font-mono text-xs whitespace-nowrap">${student.phone}</td>
+        <td class="py-4 px-6 text-[#4F3F35] font-medium whitespace-nowrap">${formattedJoiningDate}</td>
+        <td class="py-4 px-6 whitespace-nowrap">${currentMonthBadge}</td>
+        <td class="py-4 px-6 text-center whitespace-nowrap">
           <div class="flex items-center justify-center gap-2">
             <button type="button" onclick="openStudentModal(${student.id})" 
                     class="btn-3d-secondary inline-flex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#D8C7B8] bg-[#FAF7F2] hover:bg-[#F0E5D8] text-[#3A2C24] text-xs font-semibold rounded-xl">
@@ -1474,14 +1474,14 @@ window.openStudentModal = function(studentId) {
     } else {
       ledgerBody.innerHTML = ledgerRows.map(r => `
         <tr class="row-float-3d border-b border-[#F1EAE1] ${r.isCurrentMonth ? 'bg-amber-50/50 font-semibold' : ''}">
-          <td class="py-3 px-3.5 font-bold text-brand-dark flex items-center gap-1.5">
+          <td class="py-3 px-3.5 font-bold text-brand-dark flex items-center gap-1.5 whitespace-nowrap">
             ${r.month}
             ${r.isCurrentMonth ? '<span class="text-[9px] uppercase tracking-wider bg-amber-200/90 text-amber-900 px-1.5 py-0.5 rounded font-extrabold shadow-2xs">Current</span>' : ''}
           </td>
-          <td class="py-3 px-3.5 font-bold text-brand-dark">${r.amount}</td>
-          <td class="py-3 px-3.5 text-stone-600 font-medium">${r.date}</td>
-          <td class="py-3 px-3.5 text-stone-600">${r.mode}</td>
-          <td class="py-3 px-3.5 text-right">${r.statusHtml}</td>
+          <td class="py-3 px-3.5 font-bold text-brand-dark whitespace-nowrap">${r.amount}</td>
+          <td class="py-3 px-3.5 text-stone-600 font-medium whitespace-nowrap">${r.date}</td>
+          <td class="py-3 px-3.5 text-stone-600 whitespace-nowrap">${r.mode}</td>
+          <td class="py-3 px-3.5 text-right whitespace-nowrap">${r.statusHtml}</td>
         </tr>
       `).join('');
     }

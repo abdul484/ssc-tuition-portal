@@ -1131,3 +1131,118 @@ header a[href*="home"] > div:first-child img {
   max-width: 60px !important;
   object-fit: contain !important;
 }
+
+/* ==========================================================================
+   Responsive Horizontal Scroll & Mobile Touch-Swipe for Data Tables
+   ========================================================================== */
+.table-scroll-wrapper,
+.table-scroll-container,
+.modal-ledger-wrapper,
+.overflow-x-auto {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
+}
+
+/* Smooth sleek scrollbars for horizontal tables */
+.table-scroll-wrapper::-webkit-scrollbar,
+.table-scroll-container::-webkit-scrollbar,
+.modal-ledger-wrapper::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+  height: 5px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track,
+.table-scroll-container::-webkit-scrollbar-track,
+.modal-ledger-wrapper::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: rgba(38, 23, 16, 0.04);
+  border-radius: 9999px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb,
+.table-scroll-container::-webkit-scrollbar-thumb,
+.modal-ledger-wrapper::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: rgba(112, 94, 83, 0.28);
+  border-radius: 9999px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover,
+.table-scroll-container::-webkit-scrollbar-thumb:hover,
+.modal-ledger-wrapper::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(112, 94, 83, 0.5);
+}
+
+/* Student Profile Modal Tuition Fee Ledger Table */
+.modal-ledger-table {
+  min-width: 520px !important;
+  width: 100% !important;
+  border-collapse: collapse;
+}
+
+.modal-ledger-table th,
+.modal-ledger-table td {
+  white-space: nowrap !important;
+}
+
+/* ==========================================================================
+   Admin Student Directory: PARENT & CONTACT Hover-Zoom Preview Card
+   ========================================================================== */
+.parent-contact-cell {
+  position: relative !important;
+  cursor: pointer !important;
+  user-select: none;
+}
+
+.parent-contact-cell:hover,
+.parent-contact-cell:focus-within,
+.parent-contact-cell.active-touch {
+  z-index: 60 !important;
+}
+
+.parent-contact-preview-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  min-width: 240px;
+  max-width: 300px;
+  background: #FFFFFF;
+  background: linear-gradient(145deg, #FFFFFF 0%, #FDFBF7 100%);
+  border: 1.5px solid #D8CEBE;
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-shadow: 0 16px 36px -6px rgba(38, 23, 16, 0.22),
+              0 6px 14px -3px rgba(38, 23, 16, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.05s,
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.05s,
+              visibility 0.2s ease 0.05s;
+  z-index: 70;
+  text-align: left;
+}
+
+.parent-contact-cell:hover .parent-contact-preview-card,
+.parent-contact-cell:focus-within .parent-contact-preview-card,
+.parent-contact-cell:active .parent-contact-preview-card,
+.parent-contact-cell.active-touch .parent-contact-preview-card {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translate(-50%, -50%) scale(1.05) !important;
+}
+
+.parent-contact-cell .parent-contact-default {
+  transition: opacity 0.2s ease;
+}
+
+.parent-contact-cell:hover .parent-contact-default,
+.parent-contact-cell.active-touch .parent-contact-default {
+  opacity: 0.2;
+}

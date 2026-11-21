@@ -120,7 +120,38 @@ function sortStudentList(list, sortOrder = 'class-asc') {
     const rollA = a.rollNo || a.roll_no || `SSC-${a.id || a.studentId || 0}`;
     const rollB = b.rollNo || b.roll_no || `SSC-${b.id || b.studentId || 0}`;
 
-    if (sortOrder === 'class-asc') {
+    if (sortOrder === 'pending_first') {
+      const getFeeTier = (item) => {
+        const isDisc = item.status === 'Discontinued' || item.isDiscontinued;
+        const isNotJoined = item.status === 'Not Joined' || item.isNotJoined;
+        if (isDisc || isNotJoined) return 4;
+
+        const st = (item.status || '').toLowerCase().trim();
+        // 1) Pending students first
+        if (st === 'pending' || (item.balance > 0 && (!item.paidAmount || item.paidAmount === 0))) {
+          return 1;
+        }
+        // 2) Partial / Half Paid students second
+        if (st === 'half paid' || st === 'partial' || (item.paidAmount > 0 && item.balance > 0)) {
+          return 2;
+        }
+        // 3) Full Paid / Cleared students third
+        if (st === 'full paid' || st === 'paid' || st === 'cleared' || (item.balance <= 0 && item.paidAmount > 0)) {
+          return 3;
+        }
+        // 4) Not Joined and Discontinued students at the bottom
+        return 4;
+      };
+
+      const tierA = getFeeTier(a);
+      const tierB = getFeeTier(b);
+      if (tierA !== tierB) return tierA - tierB;
+
+      if (rankA !== rankB) return rankA - rankB;
+      const nameCmp = nameA.localeCompare(nameB);
+      if (nameCmp !== 0) return nameCmp;
+      return extractRollNum(rollA) - extractRollNum(rollB);
+    } else if (sortOrder === 'class-asc') {
       if (rankA !== rankB) return rankA - rankB;
       const nameCmp = nameA.localeCompare(nameB);
       if (nameCmp !== 0) return nameCmp;
